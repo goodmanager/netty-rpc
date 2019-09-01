@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.felix.rpc.framework.common.dto.RpcRequest;
 import com.felix.rpc.framework.common.dto.RpcResponse;
+import com.felix.rpc.framework.common.utils.JsonUtil;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -16,7 +17,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 
 public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 
-	// log4j日志记录
 	private Logger logger = LoggerFactory.getLogger(RpcServerHandler.class);
 
 	Map<String, Object> serviceBeanMap = null;
@@ -39,7 +39,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 			public void run() {
 				RpcRequest rpcRequest = (RpcRequest) msg;
 				String requestId = rpcRequest.getRequestId();
-				logger.info("requestId:{},接收到来自RPC客户端的连接请求,请求参数:{}", requestId, rpcRequest);
+				logger.info("requestId:{},接收到来自RPC客户端的连接请求,请求参数:{}", requestId, JsonUtil.objectToString(rpcRequest));
 				RpcResponse rpcResponse = new RpcResponse();
 				// 设置requestId
 				rpcResponse.setRequestId(rpcRequest.getRequestId());
@@ -57,7 +57,8 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 				ctx.writeAndFlush(rpcResponse).addListener(new ChannelFutureListener() {
 					@Override
 					public void operationComplete(ChannelFuture channelFuture) throws Exception {
-						logger.info("requestId:{},请求处理完毕，回写response对象给客户端", requestId);
+						logger.info("requestId:{},请求处理完毕，回写response:{}对象给客户端", requestId,
+								JsonUtil.objectToString(rpcResponse));
 					}
 				});
 			}
@@ -89,7 +90,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 		// 通过反射调用方法
 		logger.info("requestId:{},准备通过反射调用方法:{}", requestId, interfaceName + "." + methodName);
 		Object result = method.invoke(serivceBean, parameters);
-		logger.info("requestId:{},通过反射调用方法完毕,结果:{}", requestId, result);
+		logger.info("requestId:{},通过反射调用方法完毕,结果:{}", requestId, JsonUtil.objectToString(result));
 		// 返回结果
 		return result;
 	}

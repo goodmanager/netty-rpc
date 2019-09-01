@@ -68,7 +68,7 @@ public class RpcProxy {
 						// 设置参数列表parameters
 						request.setParameters(args);
 
-						logger.info("requestId:{},RpcRequest对象构建完毕,准备发现服务{}", requestId, interfaceName);
+						logger.info("requestId:{},RpcRequest对象构建完毕,准备发现服务:{}", requestId, interfaceName);
 						RpcClient rpcClient = null;
 						// 发现服务，得到服务地址，格式为 host:port
 						if (registerCenterConfig.getRegisterCenterType().getIndex() == RegisterCenterType.ZOOKEEPER

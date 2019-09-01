@@ -105,7 +105,7 @@ public class NettyRpcServer implements ApplicationRunner {
 					});
 
 			// 绑定端口，同步等待成功，该方法是同步阻塞的，绑定成功后返回一个ChannelFuture
-			logger.info("准备绑定服务提供者地址和端口[{}:{}]", nettyServerConfig.getHostName(), nettyServerConfig.getPort());
+			logger.info("准备绑定服务提供者地址和端口{}:{}", nettyServerConfig.getHostName(), nettyServerConfig.getPort());
 			ChannelFuture f = b.bind(nettyServerConfig.getHostName(), nettyServerConfig.getPort()).sync();
 
 			for (String interfaceName : serviceBeanMap.keySet()) {
