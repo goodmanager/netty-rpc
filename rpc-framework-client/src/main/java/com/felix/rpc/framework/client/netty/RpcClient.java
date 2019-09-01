@@ -65,9 +65,9 @@ public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
 						@Override
 						protected void initChannel(SocketChannel sc) throws Exception {
 							// 添加编码器，Rpc服务端需要解码的是RpcRequest对象，因为需要接收客户端发送过来的请求
-							sc.pipeline().addLast(new RpcDecoder(RpcResponse.class))
+							sc.pipeline().addLast(new RpcEncoder(RpcRequest.class))
 									// 添加解码器
-									.addLast(new RpcEncoder())
+									.addLast(new RpcDecoder(RpcResponse.class))
 									// 添加业务处理handler
 									.addLast(RpcClient.this);
 						}
