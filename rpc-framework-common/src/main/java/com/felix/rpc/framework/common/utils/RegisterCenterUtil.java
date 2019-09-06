@@ -1,41 +1,66 @@
 package com.felix.rpc.framework.common.utils;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.net.HostAndPort;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.Server;
+import com.orbitz.consul.Consul;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
-import com.ecwid.consul.v1.ConsulClient;
 import com.felix.rpc.framework.common.config.RegisterCenterConfig;
 
 public class RegisterCenterUtil {
 
+	/**
+	 * 从zookeeper服务器列表中选择一个
+	 * 
+	 * @param registerCenterConfig
+	 * @return
+	 */
 	public static CuratorFramework getZkClient(RegisterCenterConfig registerCenterConfig) {
-		CuratorFramework zkClient = null;
+		CuratorFramework zkClient;
 		List<String> hosts = registerCenterConfig.getHosts();
-		for (String host : hosts) {
-			String[] address = host.split(":");
-			zkClient = CuratorFrameworkFactory.newClient(address[0] + ":" + address[1],
-					new ExponentialBackoffRetry(1000, 3));
-			if (zkClient != null) {
-				zkClient.start();
-				break;
-			}
-		}
+		Server server = getRegisterServer(hosts);
+		zkClient = CuratorFrameworkFactory.newClient(server.getHost() + ":" + server.getPort(),
+				new ExponentialBackoffRetry(1000, 3));
+		zkClient.start();
 		return zkClient;
 	}
 
-	public static ConsulClient getConsulClient(RegisterCenterConfig registerCenterConfig) {
-		ConsulClient consulClient = null;
+	/**
+	 * 从consul服务器列表中选择一个
+	 * 
+	 * @param registerCenterConfig
+	 * @return
+	 */
+	public static Consul getConsulClient(RegisterCenterConfig registerCenterConfig) {
+		Consul client;
 		List<String> hosts = registerCenterConfig.getHosts();
+		Server server = getRegisterServer(hosts);
+		HostAndPort hostAndPort = HostAndPort.fromParts(server.getHost(), server.getPort());
+		client = Consul.builder().withHostAndPort(hostAndPort).build();
+		return client;
+	}
+
+	/**
+	 * 从列表中选择一个
+	 * 
+	 * @param hosts
+	 * @return
+	 */
+	private static Server getRegisterServer(List<String> hosts) {
+		BaseLoadBalancer lb = new BaseLoadBalancer();
+		List<Server> servers = new ArrayList<>();
 		for (String host : hosts) {
 			String[] address = host.split(":");
-			consulClient = new ConsulClient(address[0], Integer.valueOf(address[1]));
-			if (consulClient != null) {
-				break;
-			}
+			servers.add(new Server(address[0], Integer.valueOf(address[1])));
 		}
-		return consulClient;
+		lb.addServers(servers);
+		return lb.chooseServer(null);
 	}
 }

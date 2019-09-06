@@ -1,34 +1,33 @@
 package com.felix.rpc.framework.register;
 
-import com.ecwid.consul.v1.ConsulClient;
-import com.ecwid.consul.v1.agent.model.NewService;
 import com.felix.rpc.framework.common.dto.ConsulServiceInstanceDetail;
+import com.orbitz.consul.AgentClient;
+import com.orbitz.consul.Consul;
+import com.orbitz.consul.NotRegisteredException;
+import com.orbitz.consul.model.agent.ImmutableRegistration;
+import com.orbitz.consul.model.agent.Registration;
 
 public class ConsulServiceRegister {
 
-	private ConsulClient client;
+    private Consul client;
 
-	public ConsulServiceRegister(ConsulClient client) {
-		this.client = client;
-	}
+    public ConsulServiceRegister(Consul client) {
+        this.client = client;
+    }
 
-	public void registerService(ConsulServiceInstanceDetail consulServiceInstanceDetail) {
-		// register new service
-		NewService newService = new NewService();
-		newService.setId(consulServiceInstanceDetail.getId());
-		newService.setName(consulServiceInstanceDetail.getInterfaceName());
-		newService.setTags(consulServiceInstanceDetail.getTags());
-		newService.setAddress(consulServiceInstanceDetail.getHostName());
-		newService.setPort(consulServiceInstanceDetail.getListenPort());
+    public void registerService(ConsulServiceInstanceDetail consulServiceInstanceDetail) throws NotRegisteredException {
+        // register new service
+        AgentClient agentClient = client.agentClient();
+        Registration service = ImmutableRegistration.builder()
+                .id(consulServiceInstanceDetail.getId())
+                .name(consulServiceInstanceDetail.getInterfaceName())
+                .port(consulServiceInstanceDetail.getListenPort())
+                .check(Registration.RegCheck.ttl(3L)) // registers with a TTL of 3 seconds
+                .tags(consulServiceInstanceDetail.getTags())
+                .build();
 
-		NewService.Check serviceCheck = new NewService.Check();
-		// serviceCheck.setHttp(
-		// "http://" + registerCenterConfig.getHostName() + ":" +
-		// registerCenterConfig.getPort() + "/health");
-		serviceCheck.setInterval("10s");
-
-		newService.setCheck(serviceCheck);
-		client.agentServiceRegister(newService);
-	}
+        agentClient.register(service);
+        agentClient.pass(consulServiceInstanceDetail.getId());
+    }
 
 }

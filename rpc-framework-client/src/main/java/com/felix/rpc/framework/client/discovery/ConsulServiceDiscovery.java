@@ -3,46 +3,46 @@ package com.felix.rpc.framework.client.discovery;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.orbitz.consul.Consul;
+import com.orbitz.consul.HealthClient;
+import com.orbitz.consul.model.health.ServiceHealth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.ecwid.consul.v1.ConsulClient;
-import com.ecwid.consul.v1.QueryParams;
-import com.ecwid.consul.v1.Response;
-import com.ecwid.consul.v1.health.HealthServicesRequest;
-import com.ecwid.consul.v1.health.model.HealthService;
 
 @Component
 public class ConsulServiceDiscovery {
 
-	private Logger logger = LoggerFactory.getLogger(ConsulServiceDiscovery.class);
+    private Logger logger = LoggerFactory.getLogger(ConsulServiceDiscovery.class);
 
-	private final ConcurrentHashMap<String, Response<List<HealthService>>> servicesInstanceMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, List<ServiceHealth>> servicesInstanceMap = new ConcurrentHashMap<>();
 
-	private ConsulClient client;
+    private Consul client;
 
-	public ConsulServiceDiscovery() {
+    public ConsulServiceDiscovery() {
 
-	}
+    }
 
-	public ConsulServiceDiscovery(ConsulClient consulClient) {
-		this.client = consulClient;
-	}
+    public ConsulServiceDiscovery(Consul client) {
+        this.client = client;
+    }
 
-	public Response<List<HealthService>> findServices(String serviceName) {
+    public ServiceHealth getServiceInstance(String serviceName) {
 
-		Response<List<HealthService>> healthyServices = servicesInstanceMap.get(serviceName);
-		if (healthyServices == null) {
-			HealthServicesRequest request = HealthServicesRequest.newBuilder().setPassing(true)
-					.setQueryParams(QueryParams.DEFAULT).build();
+        HealthClient healthClient = client.healthClient();
 
-			healthyServices = client.getHealthServices(serviceName, request);
-			servicesInstanceMap.put(serviceName, healthyServices);
+        // Discover only "passing" nodes
+        List<ServiceHealth> nodes = healthClient.getHealthyServiceInstances(serviceName).getResponse();
+        return nodes.get(0);
+    }
 
-			logger.info("healthy services:{}", healthyServices);
-		}
-		return healthyServices;
+	public List<ServiceHealth> getServiceInstances(String serviceName) {
+
+		HealthClient healthClient = client.healthClient();
+		// Discover only "passing" nodes
+		List<ServiceHealth> nodes = healthClient.getHealthyServiceInstances(serviceName).getResponse();
+		return nodes;
 	}
 
 }
