@@ -3,7 +3,6 @@ package com.felix.rpc.framework.common.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.net.HostAndPort;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.Server;
 import com.orbitz.consul.Consul;
@@ -13,6 +12,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import com.felix.rpc.framework.common.config.RegisterCenterConfig;
+import com.google.common.net.HostAndPort;
 
 public class RegisterCenterUtil {
 
@@ -48,7 +48,7 @@ public class RegisterCenterUtil {
 	}
 
 	/**
-	 * 从列表中选择一个
+	 * ， 从列表中选择一个
 	 * 
 	 * @param hosts
 	 * @return

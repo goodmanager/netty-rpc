@@ -7,6 +7,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.orbitz.consul.Consul;
+import com.orbitz.consul.HealthClient;
+import com.orbitz.consul.cache.ServiceHealthCache;
+import com.orbitz.consul.cache.ServiceHealthKey;
+import com.orbitz.consul.model.health.ServiceHealth;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.UriSpec;
@@ -157,7 +161,8 @@ public class NettyRpcServer implements ApplicationRunner {
 
     private void registerService(String interfaceName) throws Exception {
         String id = nettyServerConfig.getHostName() + "-" + interfaceName;
-        if (registerCenterConfig.getRegisterCenterType().getIndex() == RegisterCenterType.ZOOKEEPER.getIndex()) {
+        int index = registerCenterConfig.getRegisterCenterType().getIndex();
+        if (index == RegisterCenterType.ZOOKEEPER.getIndex()) {
             // 注册service 实例到zookeeper
             ServiceInstance<ZkServiceInstanceDetail> serviceInstance = ServiceInstance
                     .<ZkServiceInstanceDetail>builder().id(id).name(interfaceName).port(nettyServerConfig.getPort())
@@ -167,7 +172,7 @@ public class NettyRpcServer implements ApplicationRunner {
                     .uriSpec(new UriSpec("{scheme}://{address}:{port}")).build();
 
             zkServiceRegister.registerService(serviceInstance);
-        } else {
+        } else if (index == RegisterCenterType.CONSUL.getIndex()) {
             // 注册service 实例到 consul
             ConsulServiceInstanceDetail consulServiceInstanceDetail = new ConsulServiceInstanceDetail();
             consulServiceInstanceDetail.setId(id);
@@ -194,7 +199,7 @@ public class NettyRpcServer implements ApplicationRunner {
             zkServiceRegister.start();
         } else if (index == RegisterCenterType.CONSUL.getIndex()) {
             // 创建consul client
-			consulClient = RegisterCenterUtil.getConsulClient(registerCenterConfig);
+            consulClient = RegisterCenterUtil.getConsulClient(registerCenterConfig);
             consulServiceRegister = new ConsulServiceRegister(consulClient);
         }
     }
