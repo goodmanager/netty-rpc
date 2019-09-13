@@ -11,7 +11,7 @@ import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.ServiceProvider;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
-import org.apache.curator.x.discovery.strategies.RandomStrategy;
+import org.apache.curator.x.discovery.strategies.RoundRobinStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -38,7 +38,7 @@ public class ZkServiceDiscover {
 		ServiceProvider<ZkServiceInstanceDetail> provider = serviceProviderMap.get(interfaceName);
 		if (provider == null) {
 			provider = serviceDiscovery.serviceProviderBuilder().serviceName(interfaceName)
-					.providerStrategy(new RandomStrategy<ZkServiceInstanceDetail>()).build();
+					.providerStrategy(new RoundRobinStrategy<ZkServiceInstanceDetail>()).build();
 
 			ServiceProvider<ZkServiceInstanceDetail> oldProvider = serviceProviderMap.putIfAbsent(interfaceName,
 					provider);
