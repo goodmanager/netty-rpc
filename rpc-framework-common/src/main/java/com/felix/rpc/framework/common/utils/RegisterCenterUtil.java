@@ -1,9 +1,7 @@
 package com.felix.rpc.framework.common.utils;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.Server;
 import com.orbitz.consul.Consul;
 
@@ -25,7 +23,7 @@ public class RegisterCenterUtil {
 	public static CuratorFramework getZkClient(RegisterCenterConfig registerCenterConfig) {
 		CuratorFramework zkClient;
 		List<String> hosts = registerCenterConfig.getHosts();
-		Server server = getRegisterServer(hosts);
+		Server server = LoadBalancerUtil.selectServer(hosts);
 		zkClient = CuratorFrameworkFactory.newClient(server.getHost() + ":" + server.getPort(),
 				new ExponentialBackoffRetry(1000, 3));
 		zkClient.start();
@@ -41,26 +39,10 @@ public class RegisterCenterUtil {
 	public static Consul getConsulClient(RegisterCenterConfig registerCenterConfig) {
 		Consul client;
 		List<String> hosts = registerCenterConfig.getHosts();
-		Server server = getRegisterServer(hosts);
+		Server server = LoadBalancerUtil.selectServer(hosts);
 		HostAndPort hostAndPort = HostAndPort.fromParts(server.getHost(), server.getPort());
 		client = Consul.builder().withHostAndPort(hostAndPort).build();
 		return client;
 	}
 
-	/**
-	 * ， 从列表中选择一个
-	 * 
-	 * @param hosts
-	 * @return
-	 */
-	private static Server getRegisterServer(List<String> hosts) {
-		BaseLoadBalancer lb = new BaseLoadBalancer();
-		List<Server> servers = new ArrayList<>();
-		for (String host : hosts) {
-			String[] address = host.split(":");
-			servers.add(new Server(address[0], Integer.valueOf(address[1])));
-		}
-		lb.addServers(servers);
-		return lb.chooseServer(null);
-	}
 }
