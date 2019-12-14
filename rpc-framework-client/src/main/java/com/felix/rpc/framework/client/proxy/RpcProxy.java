@@ -25,8 +25,6 @@ import com.felix.rpc.framework.common.dto.RpcRequest;
 import com.felix.rpc.framework.common.dto.RpcResponse;
 import com.felix.rpc.framework.common.dto.ZkServiceInstanceDetail;
 import com.felix.rpc.framework.common.utils.RegisterCenterUtil;
-import com.felix.rpc.framework.common.utils.ServiceUtil;
-import com.netflix.loadbalancer.Server;
 
 import org.springframework.stereotype.Component;
 
@@ -75,14 +73,13 @@ public class RpcProxy {
 						// 发现服务，得到服务地址，格式为 host:port
 						if (registerCenterConfig.getRegisterCenterType().getIndex() == RegisterCenterType.ZOOKEEPER
 								.getIndex()) {
-							//从zookeeper注册中心选择一台注册中心服务器
+							// 从zookeeper注册中心选择一台注册中心服务器
 							CuratorFramework zkClient = RegisterCenterUtil.getZkClient(registerCenterConfig);
 							ZkServiceDiscover zkServiceDiscover = new ZkServiceDiscover(zkClient,
 									registerCenterConfig.getBasePath());
-							//从服务提供方列表中选择一个
-							Collection<ServiceInstance<ZkServiceInstanceDetail>> serviceInstances = zkServiceDiscover
-									.getServiceInstances(interfaceName);
-							Server serviceInstance = ServiceUtil.selectZkService(serviceInstances);
+
+							ServiceInstance<ZkServiceInstanceDetail> serviceInstance = zkServiceDiscover
+									.getServiceInstance(interfaceName);
 							// 如果服务不存在，null,否则就构建rpc客户端进行远程调用
 							if (serviceInstance == null) {
 								logger.error("requestId:{},服务:{}的提供者不存在,发现服务失败", requestId, interfaceName);
@@ -92,25 +89,25 @@ public class RpcProxy {
 								// 解析服务地址
 								logger.info("requestId:{},服务地址解析完毕,准备构建RpcClient", requestId);
 								// 构建rpc客户端
-								rpcClient = new RpcClient(serviceInstance.getHost(), serviceInstance.getPort());
+								rpcClient = new RpcClient(serviceInstance.getAddress(), serviceInstance.getPort());
 							}
 						} else {
-							//从consul注册中心选择一台注册中心服务器
+							// 从consul注册中心选择一台注册中心服务器
 							Consul consulClient = RegisterCenterUtil.getConsulClient(registerCenterConfig);
 							ConsulServiceDiscovery consulServiceDiscovery = new ConsulServiceDiscovery(consulClient);
-							List<ServiceHealth> serviceHealths = consulServiceDiscovery
-									.getServiceInstances(interfaceName);
-							Server service = ServiceUtil.selectConsulService(serviceHealths);
+							ServiceHealth healthResponse = consulServiceDiscovery.getServiceInstance(interfaceName);
+							Service service = null;
 							// 如果服务不存在，null,否则就构建rpc客户端进行远程调用
-							if (service == null) {
+							if (healthResponse == null) {
 								logger.error("requestId:{},服务:{}的提供者不存在,发现服务失败", requestId, interfaceName);
 								return null;
 							} else {
+								service = healthResponse.getService();
 								logger.info("requestId:{},发现服务完毕,准备解析服务[{}]", requestId, service);
 								// 解析服务地址
 								logger.info("requestId:{},服务地址解析完毕,准备构建RPC客户端", requestId);
 								// 构建rpc客户端
-								rpcClient = new RpcClient(service.getHost(), service.getPort());
+								rpcClient = new RpcClient(service.getAddress(), service.getPort());
 							}
 						}
 						logger.info("requestId:{},RpcClient构建完毕,准备向Rpc服务端发送请求,请求参数:{}", requestId, rpcClient);

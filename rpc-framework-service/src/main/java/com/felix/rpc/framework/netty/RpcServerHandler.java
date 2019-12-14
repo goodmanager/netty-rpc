@@ -6,9 +6,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSON;
 import com.felix.rpc.framework.common.dto.RpcRequest;
 import com.felix.rpc.framework.common.dto.RpcResponse;
-import com.felix.rpc.framework.common.utils.JsonUtil;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -39,7 +39,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 			public void run() {
 				RpcRequest rpcRequest = (RpcRequest) msg;
 				String requestId = rpcRequest.getRequestId();
-				logger.info("requestId:{},接收到来自RPC客户端的连接请求,请求参数:{}", requestId, JsonUtil.objectToString(rpcRequest));
+				logger.info("requestId:{},接收到来自RPC客户端的连接请求,请求参数:{}", requestId, JSON.toJSONString(rpcRequest));
 				RpcResponse rpcResponse = new RpcResponse();
 				// 设置requestId
 				rpcResponse.setRequestId(rpcRequest.getRequestId());
@@ -58,7 +58,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 					@Override
 					public void operationComplete(ChannelFuture channelFuture) throws Exception {
 						logger.info("requestId:{},请求处理完毕，回写response:{}对象给客户端", requestId,
-								JsonUtil.objectToString(rpcResponse));
+								JSON.toJSONString(rpcResponse));
 					}
 				});
 			}
@@ -90,7 +90,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 		// 通过反射调用方法
 		logger.info("requestId:{},准备通过反射调用方法:{}", requestId, interfaceName + "." + methodName);
 		Object result = method.invoke(serivceBean, parameters);
-		logger.info("requestId:{},通过反射调用方法完毕,结果:{}", requestId, JsonUtil.objectToString(result));
+		logger.info("requestId:{},通过反射调用方法完毕,结果:{}", requestId, JSON.toJSONString(result));
 		// 返回结果
 		return result;
 	}

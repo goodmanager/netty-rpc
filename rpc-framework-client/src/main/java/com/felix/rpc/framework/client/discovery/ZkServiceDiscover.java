@@ -14,18 +14,13 @@ import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
 import org.apache.curator.x.discovery.strategies.RoundRobinStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.felix.rpc.framework.common.config.NettyServerConfig;
 import com.felix.rpc.framework.common.dto.ZkServiceInstanceDetail;
 
 @Component
 public class ZkServiceDiscover {
 	private Logger logger = LoggerFactory.getLogger(ZkServiceDiscover.class);
-
-	@Autowired
-	private NettyServerConfig nettyServerConfig;
 
 	private ServiceDiscovery<ZkServiceInstanceDetail> serviceDiscovery;
 	private final ConcurrentHashMap<String, ServiceProvider<ZkServiceInstanceDetail>> serviceProviderMap = new ConcurrentHashMap<>();

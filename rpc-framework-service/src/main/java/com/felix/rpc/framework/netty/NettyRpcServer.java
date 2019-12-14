@@ -7,10 +7,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.orbitz.consul.Consul;
-import com.orbitz.consul.HealthClient;
-import com.orbitz.consul.cache.ServiceHealthCache;
-import com.orbitz.consul.cache.ServiceHealthKey;
-import com.orbitz.consul.model.health.ServiceHealth;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.UriSpec;
