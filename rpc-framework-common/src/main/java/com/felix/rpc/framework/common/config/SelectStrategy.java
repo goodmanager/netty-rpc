@@ -1,6 +1,6 @@
 package com.felix.rpc.framework.common.config;
 
-public enum SelectServiceStrategy {
+public enum SelectStrategy {
 
 	RANDOM(1, "Random"), ROUNDROBIN(2, "RoundRobin");
 
@@ -23,7 +23,7 @@ public enum SelectServiceStrategy {
 		this.description = description;
 	}
 
-	SelectServiceStrategy(int index, String description) {
+	SelectStrategy(int index, String description) {
 		this.index = index;
 		this.description = description;
 	}

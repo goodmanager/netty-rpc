@@ -15,6 +15,8 @@ public class RegisterCenterConfig {
 
 	private RegisterCenterType registerCenterType;
 
+	private SelectStrategy selectStrategy;
+
 	public List<String> getHosts() {
 		return hosts;
 	}
@@ -37,6 +39,14 @@ public class RegisterCenterConfig {
 
 	public void setRegisterCenterType(RegisterCenterType registerCenterType) {
 		this.registerCenterType = registerCenterType;
+	}
+
+	public SelectStrategy getSelectStrategy() {
+		return selectStrategy;
+	}
+
+	public void setSelectStrategy(SelectStrategy selectStrategy) {
+		this.selectStrategy = selectStrategy;
 	}
 
 }

@@ -1,7 +1,11 @@
 package com.felix.rpc.framework.client.discovery;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.felix.rpc.framework.common.config.NettyServerConfig;
+import com.felix.rpc.framework.common.utils.LoadBalancerUtil;
+import com.netflix.loadbalancer.Server;
 import com.orbitz.consul.Consul;
 import com.orbitz.consul.HealthClient;
 import com.orbitz.consul.model.health.ServiceHealth;
@@ -13,24 +17,24 @@ public class ConsulServiceDiscovery {
 
 	private Consul client;
 
+	private NettyServerConfig nettyServerConfig;
+
 	public ConsulServiceDiscovery() {
 
 	}
 
-	public ConsulServiceDiscovery(Consul client) {
+	public ConsulServiceDiscovery(Consul client, NettyServerConfig nettyServerConfig) {
 		this.client = client;
+		this.nettyServerConfig = nettyServerConfig;
 	}
 
-	public ServiceHealth getServiceInstance(String serviceName) {
+	public Server getServiceInstance(String serviceName) {
 		HealthClient healthClient = client.healthClient();
 		List<ServiceHealth> nodes = healthClient.getHealthyServiceInstances(serviceName).getResponse();
-		return nodes.get(0);
+		List<String> hosts = new ArrayList<>();
+		for (ServiceHealth serviceHealth : nodes) {
+			hosts.add(serviceHealth.getService().getAddress() + ":" + serviceHealth.getService().getPort());
+		}
+		return LoadBalancerUtil.selectServer(hosts, nettyServerConfig.getSelectStrategy());
 	}
-
-	public List<ServiceHealth> getServiceInstances(String serviceName) {
-		HealthClient healthClient = client.healthClient();
-		List<ServiceHealth> nodes = healthClient.getHealthyServiceInstances(serviceName).getResponse();
-		return nodes;
-	}
-
 }

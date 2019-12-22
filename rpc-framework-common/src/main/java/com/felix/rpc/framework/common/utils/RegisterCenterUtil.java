@@ -8,35 +8,25 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import com.felix.rpc.framework.common.config.RegisterCenterConfig;
 import com.google.common.net.HostAndPort;
+import com.netflix.loadbalancer.Server;
 import com.orbitz.consul.Consul;
 
 public class RegisterCenterUtil {
 
 	public static CuratorFramework getZkClient(RegisterCenterConfig registerCenterConfig) {
-		CuratorFramework zkClient = null;
+		CuratorFramework zkClient;
 		List<String> hosts = registerCenterConfig.getHosts();
-		for (String host : hosts) {
-			String[] address = host.split(":");
-			zkClient = CuratorFrameworkFactory.newClient(address[0] + ":" + address[1],
-					new ExponentialBackoffRetry(1000, 3));
-			if (zkClient != null) {
-				zkClient.start();
-				break;
-			}
-		}
+		Server server = LoadBalancerUtil.selectServer(hosts, registerCenterConfig.getSelectStrategy());
+		zkClient = CuratorFrameworkFactory.newClient(server.getHost() + ":" + server.getPort(),
+				new ExponentialBackoffRetry(1000, 3));
+		zkClient.start();
 		return zkClient;
 	}
 
 	public static Consul getConsulClient(RegisterCenterConfig registerCenterConfig) {
-		Consul consulClient = null;
 		List<String> hosts = registerCenterConfig.getHosts();
-		for (String host : hosts) {
-			HostAndPort hostAndPort = HostAndPort.fromHost(host);
-			consulClient = Consul.builder().withHostAndPort(hostAndPort).build();
-			if (consulClient != null) {
-				break;
-			}
-		}
-		return consulClient;
+		Server server = LoadBalancerUtil.selectServer(hosts, registerCenterConfig.getSelectStrategy());
+		HostAndPort hostAndPort = HostAndPort.fromHost(server.getHost());
+		return Consul.builder().withHostAndPort(hostAndPort).build();
 	}
 }

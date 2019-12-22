@@ -11,7 +11,7 @@ public class NettyServerConfig {
 
 	private int port;
 
-	private SelectServiceStrategy selectServiceStrategy;
+	private SelectStrategy selectStrategy;
 
 	public String getHostName() {
 		return hostName;
@@ -29,12 +29,12 @@ public class NettyServerConfig {
 		this.port = port;
 	}
 
-	public SelectServiceStrategy getSelectServiceStrategy() {
-		return selectServiceStrategy;
+	public SelectStrategy getSelectStrategy() {
+		return selectStrategy;
 	}
 
-	public void setSelectServiceStrategy(SelectServiceStrategy selectServiceStrategy) {
-		this.selectServiceStrategy = selectServiceStrategy;
+	public void setSelectStrategy(SelectStrategy selectStrategy) {
+		this.selectStrategy = selectStrategy;
 	}
 
 }

@@ -3,13 +3,9 @@ package com.felix.rpc.framework.client.proxy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
 import com.orbitz.consul.Consul;
-import com.orbitz.consul.model.health.Service;
-import com.orbitz.consul.model.health.ServiceHealth;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.slf4j.Logger;
@@ -19,12 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.felix.rpc.framework.client.discovery.ConsulServiceDiscovery;
 import com.felix.rpc.framework.client.discovery.ZkServiceDiscover;
 import com.felix.rpc.framework.client.netty.RpcClient;
+import com.felix.rpc.framework.common.config.NettyServerConfig;
 import com.felix.rpc.framework.common.config.RegisterCenterConfig;
 import com.felix.rpc.framework.common.config.RegisterCenterType;
 import com.felix.rpc.framework.common.dto.RpcRequest;
 import com.felix.rpc.framework.common.dto.RpcResponse;
 import com.felix.rpc.framework.common.dto.ZkServiceInstanceDetail;
 import com.felix.rpc.framework.common.utils.RegisterCenterUtil;
+import com.netflix.loadbalancer.Server;
 
 import org.springframework.stereotype.Component;
 
@@ -38,6 +36,9 @@ public class RpcProxy {
 
 	@Autowired
 	private RegisterCenterConfig registerCenterConfig;
+
+	@Autowired
+	private NettyServerConfig nettyServerConfig;
 
 	/**
 	 * 获得动态代理对象的通用方法，实现思路：该方法中，并不需要具体的实现类对象。因为在invoke方法中，并不会调用Method这个方法
@@ -76,8 +77,8 @@ public class RpcProxy {
 							// 从zookeeper注册中心选择一台注册中心服务器
 							CuratorFramework zkClient = RegisterCenterUtil.getZkClient(registerCenterConfig);
 							ZkServiceDiscover zkServiceDiscover = new ZkServiceDiscover(zkClient,
-									registerCenterConfig.getBasePath());
-
+									registerCenterConfig.getBasePath(), nettyServerConfig);
+							// 选择一个服务
 							ServiceInstance<ZkServiceInstanceDetail> serviceInstance = zkServiceDiscover
 									.getServiceInstance(interfaceName);
 							// 如果服务不存在，null,否则就构建rpc客户端进行远程调用
@@ -94,20 +95,20 @@ public class RpcProxy {
 						} else {
 							// 从consul注册中心选择一台注册中心服务器
 							Consul consulClient = RegisterCenterUtil.getConsulClient(registerCenterConfig);
-							ConsulServiceDiscovery consulServiceDiscovery = new ConsulServiceDiscovery(consulClient);
-							ServiceHealth healthResponse = consulServiceDiscovery.getServiceInstance(interfaceName);
-							Service service = null;
+							ConsulServiceDiscovery consulServiceDiscovery = new ConsulServiceDiscovery(consulClient,
+									nettyServerConfig);
+							// 选择一个服务
+							Server service = consulServiceDiscovery.getServiceInstance(interfaceName);
 							// 如果服务不存在，null,否则就构建rpc客户端进行远程调用
-							if (healthResponse == null) {
+							if (service == null) {
 								logger.error("requestId:{},服务:{}的提供者不存在,发现服务失败", requestId, interfaceName);
 								return null;
 							} else {
-								service = healthResponse.getService();
 								logger.info("requestId:{},发现服务完毕,准备解析服务[{}]", requestId, service);
 								// 解析服务地址
 								logger.info("requestId:{},服务地址解析完毕,准备构建RPC客户端", requestId);
 								// 构建rpc客户端
-								rpcClient = new RpcClient(service.getAddress(), service.getPort());
+								rpcClient = new RpcClient(service.getHost(), service.getPort());
 							}
 						}
 						logger.info("requestId:{},RpcClient构建完毕,准备向Rpc服务端发送请求,请求参数:{}", requestId, rpcClient);
