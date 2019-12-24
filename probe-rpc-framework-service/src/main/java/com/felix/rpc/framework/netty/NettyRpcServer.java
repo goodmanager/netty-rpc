@@ -147,7 +147,7 @@ public class NettyRpcServer implements ApplicationRunner {
 			synchronized (NettyRpcServer.class) {
 				if (threadPoolExecutor == null) {
 					int threadCount = Runtime.getRuntime().availableProcessors();
-					threadPoolExecutor = new ThreadPoolExecutor(threadCount, threadCount * 10, 500L, TimeUnit.SECONDS,
+					threadPoolExecutor = new ThreadPoolExecutor(threadCount, threadCount * 10, 500L, TimeUnit.MILLISECONDS,
 							new ArrayBlockingQueue<Runnable>(20480));
 				}
 			}
