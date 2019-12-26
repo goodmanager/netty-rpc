@@ -1,5 +1,11 @@
 package com.felix.rpc.framework.common.config;
 
+/**
+ * 注册中心类型
+ * 
+ * @author felix
+ *
+ */
 public enum RegisterCenterType {
 
 	ZOOKEEPER(1, "zookeeper"), CONSUL(2, "consul");

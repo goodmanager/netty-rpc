@@ -5,12 +5,14 @@ import java.util.List;
 
 import com.felix.rpc.framework.common.config.SelectStrategy;
 import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.BestAvailableRule;
 import com.netflix.loadbalancer.RandomRule;
 import com.netflix.loadbalancer.Server;
+import com.netflix.loadbalancer.WeightedResponseTimeRule;
 
 public class LoadBalancerUtil {
 	/**
-	 * 从列表中选择一个
+	 * 从服务器列表中选择一个
 	 * 
 	 * @param hosts
 	 * @return
@@ -27,6 +29,12 @@ public class LoadBalancerUtil {
 		if (selectStrategy.getIndex() == SelectStrategy.RANDOM.getIndex()) {
 			RandomRule randomRule = new RandomRule();
 			lb.setRule(randomRule);
+		} else if (selectStrategy.getIndex() == SelectStrategy.BESTAVAILABLE.getIndex()) {
+			BestAvailableRule bestAvailable = new BestAvailableRule();
+			lb.setRule(bestAvailable);
+		} else if (selectStrategy.getIndex() == SelectStrategy.WEIGHTEDRESPONSETIME.getIndex()) {
+			WeightedResponseTimeRule weightedResponseTimeRule = new WeightedResponseTimeRule();
+			lb.setRule(weightedResponseTimeRule);
 		}
 		return lb.chooseServer(null);
 	}

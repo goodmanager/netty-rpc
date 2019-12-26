@@ -1,8 +1,17 @@
 package com.felix.rpc.framework.common.config;
 
+/**
+ * 负载均衡策略
+ * 
+ * @author felix
+ *
+ */
 public enum SelectStrategy {
 
-	RANDOM(1, "Random"), ROUNDROBIN(2, "RoundRobin");
+	RANDOM(1, "Random"), //随机
+	ROUNDROBIN(2, "RoundRobin"), //轮训
+	BESTAVAILABLE(3, "BestAvailable"),//并发数低
+	WEIGHTEDRESPONSETIME(4, "WeightedResponseTime");//加权
 
 	private int index;
 	private String description;
