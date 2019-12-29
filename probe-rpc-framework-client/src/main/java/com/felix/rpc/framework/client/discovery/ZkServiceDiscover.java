@@ -10,15 +10,13 @@ import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.ServiceProvider;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
-import org.apache.curator.x.discovery.strategies.RandomStrategy;
-import org.apache.curator.x.discovery.strategies.RoundRobinStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.felix.rpc.framework.common.config.NettyServerConfig;
-import com.felix.rpc.framework.common.config.SelectStrategy;
 import com.felix.rpc.framework.common.dto.ZkServiceInstanceDetail;
+import com.felix.rpc.framework.common.utils.LoadBalancerUtil;
 
 @Component
 public class ZkServiceDiscover {
@@ -40,25 +38,19 @@ public class ZkServiceDiscover {
 		this.nettyServerConfig = nettyServerConfig;
 	}
 
+	/**
+	 * 选择一个服务所在的服务器
+	 * 
+	 * @param interfaceName
+	 * @return
+	 * @throws Exception
+	 */
 	public ServiceInstance<ZkServiceInstanceDetail> getServiceInstance(String interfaceName) throws Exception {
 		ServiceProvider<ZkServiceInstanceDetail> provider = serviceProviderMap.get(interfaceName);
 		if (provider == null) {
-			if (nettyServerConfig.getSelectStrategy().getIndex() == SelectStrategy.RANDOM.getIndex()) {
-				provider = serviceDiscovery.serviceProviderBuilder().serviceName(interfaceName)
-						.providerStrategy(new RandomStrategy<ZkServiceInstanceDetail>()).build();
-			} else {
-				provider = serviceDiscovery.serviceProviderBuilder().serviceName(interfaceName)
-						.providerStrategy(new RoundRobinStrategy<ZkServiceInstanceDetail>()).build();
-			}
-			ServiceProvider<ZkServiceInstanceDetail> oldProvider = serviceProviderMap.putIfAbsent(interfaceName,
-					provider);
-			if (oldProvider != null) {
-				provider = oldProvider;
-			} else {
-				provider.start();
-			}
+			provider = LoadBalancerUtil.selectZookeeperServer(serviceDiscovery, interfaceName, serviceProviderMap,
+					nettyServerConfig);
 		}
-
 		return provider.getInstance();
 	}
 
@@ -67,7 +59,6 @@ public class ZkServiceDiscover {
 	}
 
 	public void close() throws IOException {
-
 		for (Map.Entry<String, ServiceProvider<ZkServiceInstanceDetail>> me : serviceProviderMap.entrySet()) {
 			try {
 				me.getValue().close();

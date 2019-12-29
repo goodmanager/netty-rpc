@@ -13,20 +13,31 @@ import com.orbitz.consul.Consul;
 
 public class RegisterCenterUtil {
 
+	/**
+	 * 从zookeeper注册中心选择一个zookeeper服务器
+	 * 
+	 * @param registerCenterConfig
+	 * @return
+	 */
 	public static CuratorFramework getZkClient(RegisterCenterConfig registerCenterConfig) {
 		CuratorFramework zkClient;
 		List<String> hosts = registerCenterConfig.getHosts();
 		Server server = LoadBalancerUtil.selectServer(hosts, registerCenterConfig.getSelectStrategy());
-		zkClient = CuratorFrameworkFactory.newClient(server.getHost() + ":" + server.getPort(),
-				new ExponentialBackoffRetry(1000, 3));
+		zkClient = CuratorFrameworkFactory.newClient(server.getHostPort(), new ExponentialBackoffRetry(200, 3));
 		zkClient.start();
 		return zkClient;
 	}
 
+	/**
+	 * 从consul注册中心选择一个consul服务器
+	 * 
+	 * @param registerCenterConfig
+	 * @return
+	 */
 	public static Consul getConsulClient(RegisterCenterConfig registerCenterConfig) {
 		List<String> hosts = registerCenterConfig.getHosts();
 		Server server = LoadBalancerUtil.selectServer(hosts, registerCenterConfig.getSelectStrategy());
-		HostAndPort hostAndPort = HostAndPort.fromHost(server.getHost());
+		HostAndPort hostAndPort = HostAndPort.fromString(server.getHostPort());
 		return Consul.builder().withHostAndPort(hostAndPort).build();
 	}
 }

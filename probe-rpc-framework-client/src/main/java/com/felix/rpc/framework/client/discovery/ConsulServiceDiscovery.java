@@ -28,6 +28,12 @@ public class ConsulServiceDiscovery {
 		this.nettyServerConfig = nettyServerConfig;
 	}
 
+	/**
+	 * 选择具体的服务器
+	 * 
+	 * @param serviceName
+	 * @return
+	 */
 	public Server getServiceInstance(String serviceName) {
 		HealthClient healthClient = client.healthClient();
 		List<ServiceHealth> nodes = healthClient.getHealthyServiceInstances(serviceName).getResponse();
@@ -35,6 +41,6 @@ public class ConsulServiceDiscovery {
 		for (ServiceHealth serviceHealth : nodes) {
 			hosts.add(serviceHealth.getService().getAddress() + ":" + serviceHealth.getService().getPort());
 		}
-		return LoadBalancerUtil.selectServer(hosts, nettyServerConfig.getSelectStrategy());
+		return LoadBalancerUtil.selectConsulServer(hosts, nettyServerConfig.getSelectStrategy());
 	}
 }
