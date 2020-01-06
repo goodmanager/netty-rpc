@@ -1,9 +1,8 @@
 package com.felix.rpc.framework.common.annotation;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.springframework.stereotype.Component;
@@ -14,8 +13,8 @@ import org.springframework.stereotype.Component;
  * @author phfelix
  *
  */
-@Retention(RUNTIME)
-@Target(TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
 @Component
 public @interface RpcService {
 	// 服务发现用的唯一标识，用于服务自动寻址

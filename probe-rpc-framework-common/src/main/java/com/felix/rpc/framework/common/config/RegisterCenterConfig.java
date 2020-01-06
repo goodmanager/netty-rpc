@@ -23,7 +23,7 @@ public class RegisterCenterConfig {
 	// 注册中心类型
 	private RegisterCenterType registerCenterType;
 
-	// 服务发现时,配置中心选择策略
+	// 服务发现时,注册中心选择策略
 	private SelectStrategy selectStrategy;
 
 	public List<String> getHosts() {

@@ -8,8 +8,6 @@ import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceProvider;
 import org.apache.curator.x.discovery.strategies.RandomStrategy;
 import org.apache.curator.x.discovery.strategies.RoundRobinStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.felix.rpc.framework.common.config.NettyServerConfig;
 import com.felix.rpc.framework.common.config.SelectStrategy;
@@ -24,7 +22,10 @@ import com.netflix.loadbalancer.WeightedResponseTimeRule;
 
 public class LoadBalancerUtil {
 
-	private final static Logger logger = LoggerFactory.getLogger(LoadBalancerUtil.class);
+	private static BaseLoadBalancer lb;
+	static {
+		lb = new BaseLoadBalancer();
+	}
 
 	/**
 	 * 从服务器列表中选择一个
@@ -33,13 +34,6 @@ public class LoadBalancerUtil {
 	 * @return
 	 */
 	public static Server selectServer(List<String> hosts, SelectStrategy selectStrategy) {
-		BaseLoadBalancer lb = new BaseLoadBalancer();
-		List<Server> servers = new ArrayList<>();
-		for (String host : hosts) {
-			String[] address = host.split(":");
-			servers.add(new Server(address[0], Integer.valueOf(address[1])));
-		}
-		lb.addServers(servers);
 		if (selectStrategy.getIndex() == SelectStrategy.RANDOM.getIndex()) {
 			RandomRule randomRule = new RandomRule();
 			lb.setRule(randomRule);
@@ -50,9 +44,13 @@ public class LoadBalancerUtil {
 			WeightedResponseTimeRule weightedResponseTimeRule = new WeightedResponseTimeRule();
 			lb.setRule(weightedResponseTimeRule);
 		}
-		Server server = lb.chooseServer(null);
-		logger.info("选择了服务器:id={},ip={},port={},name={}", server.getId(), server.getHost(), server.getPort());
-		return server;
+		List<Server> servers = new ArrayList<>();
+		for (String host : hosts) {
+			String[] address = host.split(":");
+			servers.add(new Server(address[0], Integer.valueOf(address[1])));
+		}
+		lb.addServers(servers);
+		return lb.chooseServer(null);
 	}
 
 	public static Server selectConsulServer(List<String> hosts, SelectStrategy selectStrategy) {

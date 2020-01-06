@@ -1,5 +1,10 @@
 package com.felix.rpc.framework.common.dto;
 
+import lombok.Data;
+import lombok.ToString;
+
+@Data
+@ToString
 public class ZkServiceInstanceDetail {
 
 	private String id;
@@ -18,44 +23,6 @@ public class ZkServiceInstanceDetail {
 		this.listenAddress = listenAddress;
 		this.listenPort = listenPort;
 		this.interfaceName = interfaceName;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public String getListenAddress() {
-		return listenAddress;
-	}
-
-	public void setListenAddress(String listenAddress) {
-		this.listenAddress = listenAddress;
-	}
-
-	public int getListenPort() {
-		return listenPort;
-	}
-
-	public void setListenPort(int listenPort) {
-		this.listenPort = listenPort;
-	}
-
-	public String getInterfaceName() {
-		return interfaceName;
-	}
-
-	public void setInterfaceName(String interfaceName) {
-		this.interfaceName = interfaceName;
-	}
-
-	@Override
-	public String toString() {
-		return "InstanceDetails{" + "id='" + id + '\'' + ", listenAddress='" + listenAddress + '\'' + ", listenPort="
-				+ listenPort + ", interfaceName='" + interfaceName + '\'' + '}';
 	}
 
 }

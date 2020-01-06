@@ -51,7 +51,9 @@ public class ZkServiceDiscover {
 			provider = LoadBalancerUtil.selectZookeeperServer(serviceDiscovery, interfaceName, serviceProviderMap,
 					nettyServerConfig);
 		}
-		return provider.getInstance();
+		ServiceInstance<ZkServiceInstanceDetail> instance = provider.getInstance();
+		logger.info("选择了服务{}", instance.getId());
+		return instance;
 	}
 
 	public void start() throws Exception {

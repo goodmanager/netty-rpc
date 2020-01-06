@@ -39,12 +39,11 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 			public void run() {
 				RpcRequest rpcRequest = (RpcRequest) msg;
 				String requestId = rpcRequest.getRequestId();
-				logger.info("requestId:{},接收到来自RPC客户端的连接请求,请求参数:{}", requestId, JSON.toJSONString(rpcRequest));
+				logger.info("requestId:{},接收到来自RPC客户端的连接请求", requestId, rpcRequest);
 				RpcResponse rpcResponse = new RpcResponse();
 				// 设置requestId
 				rpcResponse.setRequestId(rpcRequest.getRequestId());
 				try {
-					logger.info("requestId:{},准备调用handle方法处理request请求对象", requestId);
 					// 调用handle方法处理request
 					Object result = handleReuqest(rpcRequest);
 					// 设置返回结果
@@ -53,12 +52,10 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 					// 如果有异常，则设置异常信息
 					rpcResponse.setError(e);
 				}
-				logger.info("requestId:{},rpc请求处理完毕，准备回写response对象", requestId);
 				ctx.writeAndFlush(rpcResponse).addListener(new ChannelFutureListener() {
 					@Override
 					public void operationComplete(ChannelFuture channelFuture) throws Exception {
-						logger.info("requestId:{},请求处理完毕，回写response:{}对象给客户端", requestId,
-								JSON.toJSONString(rpcResponse));
+						logger.info("requestId:{},请求处理完毕，回写response对象给客户端", requestId, rpcResponse);
 					}
 				});
 			}

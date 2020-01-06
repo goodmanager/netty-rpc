@@ -15,8 +15,9 @@ public class RpcFrameworkException extends RuntimeException {
 		this.message = message;
 	}
 
-	public RpcFrameworkException(int errorCode) {
+	public RpcFrameworkException(int errorCode, String message) {
 		this.errorCode = errorCode;
+		this.message = message;
 	}
 
 	@Override

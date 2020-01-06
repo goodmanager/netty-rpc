@@ -53,18 +53,24 @@ public class NettyRpcServer implements ApplicationRunner {
 	@Autowired
 	private ApplicationContext applicationContext;
 
+	// 注册中心配置
 	@Autowired
 	private RegisterCenterConfig registerCenterConfig;
 
+	// netty服务配置
 	@Autowired
 	private NettyServerConfig nettyServerConfig;
 
+	// zookeeper注册中心
 	private ZkServiceRegister zkServiceRegister;
 
+	// zookeeper client
 	private CuratorFramework client = null;
 
+	// consul注册中心
 	private ConsulServiceRegister consulServiceRegister;
 
+	// consul client
 	private Consul consulClient = null;
 
 	private static ThreadPoolExecutor threadPoolExecutor;
@@ -74,10 +80,9 @@ public class NettyRpcServer implements ApplicationRunner {
 	}
 
 	/**
-	 * 由于本类实现了InitializingBean接口，spring在构造完所有对象之后会调用afterPropertiesSet方法
-	 * 在该方法中，将服务注册到zookeeper，同时启动netty服务端程序，该方法中主要是netty框架的代码
+	 * 1.选择注册中心 2.扫描服务 3.启动netty服务端程序，并将扫描到的服务注册到注册中心
 	 */
-	public void startNettyServer() throws Exception {
+	private void startNettyServer() throws Exception {
 		// 配置注册中心
 		configRegisterCenter();
 		// 扫描 RpcService 注解
@@ -108,9 +113,6 @@ public class NettyRpcServer implements ApplicationRunner {
 			logger.info("准备绑定服务提供者地址和端口{}:{}", nettyServerConfig.getHostName(), nettyServerConfig.getPort());
 			ChannelFuture f = b.bind(nettyServerConfig.getHostName(), nettyServerConfig.getPort()).sync();
 
-			for (String interfaceName : serviceBeanMap.keySet()) {
-				registerService(interfaceName);
-			}
 			// 等待服务端监听端口关闭，阻塞，等待服务端链路关闭之后main函数才退出
 			f.channel().closeFuture().sync();
 		} finally {
@@ -121,10 +123,11 @@ public class NettyRpcServer implements ApplicationRunner {
 	}
 
 	/**
-	 * 由于本类实现了ApplicationContextAware接口，spring在构造本类对象时会调用setApplicationContext方法
-	 * 在该方法中，通过注解获取标注了RPCService的用户服务实现类，然后将其接口和实现类对象保存到serviceBeanMap中
+	 * 通过注解获取标注了RpcService的用户服务实现类，然后将其接口和实现类对象保存到serviceBeanMap中
+	 * 
+	 * @throws Exception
 	 */
-	public void scanRpcService() throws BeansException {
+	public void scanRpcService() throws Exception {
 		logger.info("准备扫描获取标注了RpcService的用户服务实现类");
 		// 通过spring获取到标注了RPCService注解的map，map的key为bean的名称，map的value为bean的实例对象
 		Map<String, Object> beansWithAnnotation = applicationContext.getBeansWithAnnotation(RpcService.class);
@@ -140,6 +143,10 @@ public class NettyRpcServer implements ApplicationRunner {
 			serviceBeanMap.put(interfaceName, serviceBean);
 		}
 		logger.info("扫描完毕,总共扫描的RpcService:{}", serviceBeanMap.keySet());
+
+		for (String interfaceName : serviceBeanMap.keySet()) {
+			registerService(interfaceName);
+		}
 	}
 
 	public static void submit(Runnable task) {
@@ -147,8 +154,8 @@ public class NettyRpcServer implements ApplicationRunner {
 			synchronized (NettyRpcServer.class) {
 				if (threadPoolExecutor == null) {
 					int threadCount = Runtime.getRuntime().availableProcessors();
-					threadPoolExecutor = new ThreadPoolExecutor(threadCount, threadCount * 10, 500L, TimeUnit.MILLISECONDS,
-							new ArrayBlockingQueue<Runnable>(20480));
+					threadPoolExecutor = new ThreadPoolExecutor(threadCount, threadCount * 10, 500L,
+							TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(20480));
 				}
 			}
 		}
@@ -182,7 +189,7 @@ public class NettyRpcServer implements ApplicationRunner {
 	}
 
 	/**
-	 * 注册中心
+	 * 选择并创建注册中心client
 	 *
 	 * @throws Exception
 	 */

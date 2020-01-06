@@ -10,10 +10,14 @@ import com.orbitz.consul.Consul;
 import com.orbitz.consul.HealthClient;
 import com.orbitz.consul.model.health.ServiceHealth;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ConsulServiceDiscovery {
+
+	private static final Logger logger = LoggerFactory.getLogger(ConsulServiceDiscovery.class);
 
 	private Consul client;
 
@@ -41,6 +45,8 @@ public class ConsulServiceDiscovery {
 		for (ServiceHealth serviceHealth : nodes) {
 			hosts.add(serviceHealth.getService().getAddress() + ":" + serviceHealth.getService().getPort());
 		}
-		return LoadBalancerUtil.selectConsulServer(hosts, nettyServerConfig.getSelectStrategy());
+		Server selectConsulServer = LoadBalancerUtil.selectConsulServer(hosts, nettyServerConfig.getSelectStrategy());
+		logger.info("选择了服务:{}", selectConsulServer.getId());
+		return selectConsulServer;
 	}
 }
