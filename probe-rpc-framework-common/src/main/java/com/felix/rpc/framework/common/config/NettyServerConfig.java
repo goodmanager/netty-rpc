@@ -13,18 +13,18 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "spring.netty-server")
 public class NettyServerConfig {
 
-	private String hostName;
+	private String ipAddr;
 
 	private int port;
 
 	private SelectStrategy selectStrategy;
 
-	public String getHostName() {
-		return hostName;
+	public String getIpAddr() {
+		return ipAddr;
 	}
 
-	public void setHostName(String hostName) {
-		this.hostName = hostName;
+	public void setIpAddr(String ipAddr) {
+		this.ipAddr = ipAddr;
 	}
 
 	public int getPort() {

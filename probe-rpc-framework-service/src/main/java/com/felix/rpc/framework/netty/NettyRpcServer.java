@@ -12,7 +12,6 @@ import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.UriSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -110,8 +109,8 @@ public class NettyRpcServer implements ApplicationRunner {
 					});
 
 			// 绑定端口，同步等待成功，该方法是同步阻塞的，绑定成功后返回一个ChannelFuture
-			logger.info("准备绑定服务提供者地址和端口{}:{}", nettyServerConfig.getHostName(), nettyServerConfig.getPort());
-			ChannelFuture f = b.bind(nettyServerConfig.getHostName(), nettyServerConfig.getPort()).sync();
+			logger.info("准备绑定服务提供者地址和端口{}:{}", nettyServerConfig.getIpAddr(), nettyServerConfig.getPort());
+			ChannelFuture f = b.bind(nettyServerConfig.getIpAddr(), nettyServerConfig.getPort()).sync();
 
 			// 等待服务端监听端口关闭，阻塞，等待服务端链路关闭之后main函数才退出
 			f.channel().closeFuture().sync();
@@ -163,15 +162,14 @@ public class NettyRpcServer implements ApplicationRunner {
 	}
 
 	private void registerService(String interfaceName) throws Exception {
-		String id = nettyServerConfig.getHostName() + "-" + nettyServerConfig.getPort() + "-" + interfaceName;
+		String id = nettyServerConfig.getIpAddr() + "-" + nettyServerConfig.getPort() + "-" + interfaceName;
 		int index = registerCenterConfig.getRegisterCenterType().getIndex();
 		if (index == RegisterCenterType.ZOOKEEPER.getIndex()) {
 			// 注册service 实例到zookeeper
 			ServiceInstance<ZkServiceInstanceDetail> serviceInstance = ServiceInstance
 					.<ZkServiceInstanceDetail>builder().id(id).name(interfaceName).port(nettyServerConfig.getPort())
-					.address(nettyServerConfig.getHostName())
-					.payload(new ZkServiceInstanceDetail(id, nettyServerConfig.getHostName(),
-							nettyServerConfig.getPort(), interfaceName))
+					.address(nettyServerConfig.getIpAddr()).payload(new ZkServiceInstanceDetail(id,
+							nettyServerConfig.getIpAddr(), nettyServerConfig.getPort(), interfaceName))
 					.uriSpec(new UriSpec("{scheme}://{address}:{port}")).build();
 
 			zkServiceRegister.registerService(serviceInstance);
@@ -179,7 +177,7 @@ public class NettyRpcServer implements ApplicationRunner {
 			// 注册service 实例到 consul
 			ConsulServiceInstanceDetail consulServiceInstanceDetail = new ConsulServiceInstanceDetail();
 			consulServiceInstanceDetail.setId(id);
-			consulServiceInstanceDetail.setHostName(nettyServerConfig.getHostName());
+			consulServiceInstanceDetail.setHostName(nettyServerConfig.getIpAddr());
 			consulServiceInstanceDetail.setListenPort(nettyServerConfig.getPort());
 			consulServiceInstanceDetail.setInterfaceName(interfaceName);
 			consulServiceRegister.registerService(consulServiceInstanceDetail);

@@ -23,8 +23,4 @@ public class RpcRequest {
 	// 方法的参数值
 	private Object[] parameters;
 
-	public String getRequestId() {
-		return requestId;
-	}
-
 }
