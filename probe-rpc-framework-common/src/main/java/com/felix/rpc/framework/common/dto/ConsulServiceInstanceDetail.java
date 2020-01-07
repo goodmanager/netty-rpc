@@ -11,7 +11,7 @@ public class ConsulServiceInstanceDetail {
 
 	private String id;
 
-	private String hostName;
+	private String ipAddr;
 
 	private int listenPort;
 

@@ -19,8 +19,8 @@ public class ConsulServiceRegister {
 		// register new service
 		AgentClient agentClient = client.agentClient();
 		Registration service = ImmutableRegistration.builder().id(consulServiceInstanceDetail.getId())
-				.name(consulServiceInstanceDetail.getInterfaceName()).port(consulServiceInstanceDetail.getListenPort())
-				.check(Registration.RegCheck.ttl(3L)) // registers with a TTL of 3 seconds
+				.name(consulServiceInstanceDetail.getInterfaceName()).address(consulServiceInstanceDetail.getIpAddr())
+				.port(consulServiceInstanceDetail.getListenPort()).check(Registration.RegCheck.ttl(3L))
 				.tags(consulServiceInstanceDetail.getTags()).build();
 
 		agentClient.register(service);

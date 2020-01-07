@@ -1,5 +1,7 @@
 package com.felix.rpc.framework.netty;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -175,11 +177,14 @@ public class NettyRpcServer implements ApplicationRunner {
 			zkServiceRegister.registerService(serviceInstance);
 		} else if (index == RegisterCenterType.CONSUL.getIndex()) {
 			// 注册service 实例到 consul
+			List<String> tags = new ArrayList<>();
+			tags.add(interfaceName);
 			ConsulServiceInstanceDetail consulServiceInstanceDetail = new ConsulServiceInstanceDetail();
 			consulServiceInstanceDetail.setId(id);
-			consulServiceInstanceDetail.setHostName(nettyServerConfig.getIpAddr());
+			consulServiceInstanceDetail.setIpAddr(nettyServerConfig.getIpAddr());
 			consulServiceInstanceDetail.setListenPort(nettyServerConfig.getPort());
 			consulServiceInstanceDetail.setInterfaceName(interfaceName);
+			consulServiceInstanceDetail.setTags(tags);
 			consulServiceRegister.registerService(consulServiceInstanceDetail);
 		}
 		logger.info("向注册中心:{},注册服务:{}成功,正在监听来自RpcClient的请求连接",
