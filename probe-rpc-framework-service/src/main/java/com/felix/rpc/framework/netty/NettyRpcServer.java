@@ -35,18 +35,25 @@ import com.felix.rpc.framework.register.ConsulServiceRegister;
 import com.felix.rpc.framework.register.ZkServiceRegister;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.util.internal.SystemPropertyUtil;
 
 @Component
 public class NettyRpcServer implements ApplicationRunner {
 
 	private Logger logger = LoggerFactory.getLogger(NettyRpcServer.class);
+
+	private static final int DEFAULT_EVENT_LOOP_THREADS = Math.max(1,
+			SystemPropertyUtil.getInt("io.netty.eventLoopThreads", Runtime.getRuntime().availableProcessors() * 2));
 
 	// 用来保存用户服务实现类对象，key为实现类的接口名称，value为实现类对象
 	private Map<String, Object> serviceBeanMap = new ConcurrentHashMap<>();
@@ -91,24 +98,28 @@ public class NettyRpcServer implements ApplicationRunner {
 
 		logger.info("准备构建Rpc服务端，监听来自Rpc客户端的请求");
 		// 配置服务端NIO线程组
-		EventLoopGroup bossGroup = new NioEventLoopGroup();
-		EventLoopGroup workerGroup = new NioEventLoopGroup();
+		EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+		EventLoopGroup workerGroup = new NioEventLoopGroup(DEFAULT_EVENT_LOOP_THREADS);
 
 		try {
 			ServerBootstrap b = new ServerBootstrap();
-			b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).option(ChannelOption.SO_BACKLOG, 1024)
-					.childOption(ChannelOption.SO_KEEPALIVE, true)
+			b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).option(ChannelOption.SO_BACKLOG, 128)
 					.childHandler(new ChannelInitializer<SocketChannel>() {
 						@Override
 						protected void initChannel(SocketChannel sc) throws Exception {
+							ChannelPipeline cp = sc.pipeline();
+							cp.addLast(new LengthFieldBasedFrameDecoder(1024, 0, 2, 0, 2));
 							// 添加编码器，Rpc服务端需要解码的是RpcRequest对象，因为需要接收客户端发送过来的请求
-							sc.pipeline().addLast(new RpcDecoder(RpcRequest.class))
-									// 添加解码器
-									.addLast(new RpcEncoder(RpcResponse.class))
-									// 添加业务处理handler
-									.addLast(new RpcServerHandler(serviceBeanMap));
+							cp.addLast(new RpcDecoder(RpcRequest.class));
+							// 添加解码器
+							cp.addLast(new RpcEncoder(RpcResponse.class));
+							// 添加业务处理handler
+							cp.addLast(new RpcServerHandler(serviceBeanMap));
 						}
-					});
+					}).childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+					.childOption(ChannelOption.SO_SNDBUF, 32 * 1024)
+					.childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000).childOption(ChannelOption.SO_TIMEOUT, 10)
+					.childOption(ChannelOption.TCP_NODELAY, true).childOption(ChannelOption.SO_RCVBUF, 32 * 1024);
 
 			// 绑定端口，同步等待成功，该方法是同步阻塞的，绑定成功后返回一个ChannelFuture
 			logger.info("准备绑定服务提供者地址和端口{}:{}", nettyServerConfig.getIpAddr(), nettyServerConfig.getPort());

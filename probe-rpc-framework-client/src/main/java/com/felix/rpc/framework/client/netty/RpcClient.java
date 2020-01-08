@@ -13,11 +13,13 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
 public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
 
@@ -58,18 +60,20 @@ public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
 		EventLoopGroup group = new NioEventLoopGroup();
 		try {
 			Bootstrap b = new Bootstrap();
-			b.group(group).channel(NioSocketChannel.class).option(ChannelOption.SO_BACKLOG, 1024)
+			b.group(group).channel(NioSocketChannel.class).option(ChannelOption.SO_BACKLOG, 128)
 					// 设置TCP连接超时时间
 					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
 					.handler(new ChannelInitializer<SocketChannel>() {
 						@Override
 						protected void initChannel(SocketChannel sc) throws Exception {
+							ChannelPipeline cp = sc.pipeline();
 							// 添加编码器，Rpc服务端需要解码的是RpcRequest对象，因为需要接收客户端发送过来的请求
-							sc.pipeline().addLast(new RpcEncoder(RpcRequest.class))
-									// 添加解码器
-									.addLast(new RpcDecoder(RpcResponse.class))
-									// 添加业务处理handler
-									.addLast(RpcClient.this);
+							cp.addLast(new RpcEncoder(RpcRequest.class));
+							cp.addLast(new LengthFieldBasedFrameDecoder(1024, 0, 2, 0, 2));
+							// 添加解码器
+							cp.addLast(new RpcDecoder(RpcResponse.class));
+							// 添加业务处理handler
+							cp.addLast(RpcClient.this);
 						}
 					});
 			// 发起异步连接操作（注意服务端是bind，客户端则需要connect）
