@@ -211,12 +211,12 @@ public class NettyRpcServer implements ApplicationRunner {
 		int index = registerCenterConfig.getRegisterCenterType().getIndex();
 		// 创建zookeeper client
 		if (index == RegisterCenterType.ZOOKEEPER.getIndex()) {
-			client = RegisterCenterUtil.getZkClient(registerCenterConfig);
+			client = RegisterCenterUtil.getZkClient(registerCenterConfig, null);
 			zkServiceRegister = new ZkServiceRegister(client, registerCenterConfig.getBasePath());
 			zkServiceRegister.start();
 		} else if (index == RegisterCenterType.CONSUL.getIndex()) {
 			// 创建consul client
-			consulClient = RegisterCenterUtil.getConsulClient(registerCenterConfig);
+			consulClient = RegisterCenterUtil.getConsulClient(registerCenterConfig, null);
 			consulServiceRegister = new ConsulServiceRegister(consulClient);
 		}
 	}

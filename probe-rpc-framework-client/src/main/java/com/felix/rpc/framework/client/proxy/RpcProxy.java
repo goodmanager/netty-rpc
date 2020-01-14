@@ -3,7 +3,6 @@ package com.felix.rpc.framework.client.proxy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.UUID;
 
 import com.orbitz.consul.Consul;
 import org.apache.curator.framework.CuratorFramework;
@@ -49,44 +48,42 @@ public class RpcProxy {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> T getProxy(Class<?> interfaceClass) {
+	public <T> T getProxy(Class<?> interfaceClass, String requestId) {
 
 		T proxy = (T) Proxy.newProxyInstance(RpcProxy.class.getClassLoader(), new Class<?>[] { interfaceClass },
 				new InvocationHandler() {
 					@Override
 					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-						String requestId = UUID.randomUUID().toString();
-						logger.info("requestId:{},准备构建RPCRequest对象", requestId);
+						logger.info("requestId:{},准备构建RpcRequest对象", requestId);
 						// 构建RpcRequest
-						RpcRequest request = new RpcRequest();
+						RpcRequest rpcRequest = new RpcRequest();
 						// 设置requestId
-						request.setRequestId(requestId);
+						rpcRequest.setRequestId(requestId);
 						// 设置接口
 						String interfaceName = method.getDeclaringClass().getName();
-						request.setInterfaceName(interfaceName);
-						request.setMethodName(method.getName());
-						request.setParameterTypes(method.getParameterTypes());
+						rpcRequest.setInterfaceName(interfaceName);
+						rpcRequest.setMethodName(method.getName());
+						rpcRequest.setParameterTypes(method.getParameterTypes());
 						// 设置参数列表parameters
-						request.setParameters(args);
+						rpcRequest.setParameters(args);
 
-						logger.info("requestId:{},RpcRequest对象构建完毕,准备发现服务:{}", requestId, interfaceName);
+						logger.info("requestId:{},RpcRequest:{},构建完毕", requestId, rpcRequest);
 						RpcClient rpcClient = null;
 						// 发现服务，得到服务地址，格式为 host:port
 						if (registerCenterConfig.getRegisterCenterType().getIndex() == RegisterCenterType.ZOOKEEPER
 								.getIndex()) {
 							// 从zookeeper注册中心选择一台注册中心服务器
-							CuratorFramework zkClient = RegisterCenterUtil.getZkClient(registerCenterConfig);
+							CuratorFramework zkClient = RegisterCenterUtil.getZkClient(registerCenterConfig, requestId);
 							ZkServiceDiscover zkServiceDiscover = new ZkServiceDiscover(zkClient,
 									registerCenterConfig.getBasePath(), nettyServerConfig);
 							// 选择一个服务
 							ServiceInstance<ZkServiceInstanceDetail> serviceInstance = zkServiceDiscover
-									.getServiceInstance(interfaceName);
+									.getServiceInstance(rpcRequest);
 							// 如果服务不存在，null,否则就构建rpc客户端进行远程调用
 							if (serviceInstance == null) {
-								logger.error("requestId:{},服务:{}的提供者不存在,发现服务失败", requestId, interfaceName);
+								logger.error("requestId:{},服务:{}的提供者不存在,发现服务失败", requestId, rpcRequest);
 								return null;
 							} else {
-								logger.info("requestId:{},发现服务完毕,准备解析服务:{}", requestId, serviceInstance);
 								// 解析服务地址
 								logger.info("requestId:{},服务地址解析完毕,准备构建RpcClient", requestId);
 								// 构建rpc客户端
@@ -94,26 +91,25 @@ public class RpcProxy {
 							}
 						} else {
 							// 从consul注册中心选择一台注册中心服务器
-							Consul consulClient = RegisterCenterUtil.getConsulClient(registerCenterConfig);
+							Consul consulClient = RegisterCenterUtil.getConsulClient(registerCenterConfig, requestId);
 							ConsulServiceDiscovery consulServiceDiscovery = new ConsulServiceDiscovery(consulClient,
 									nettyServerConfig);
 							// 选择一个服务
-							Server service = consulServiceDiscovery.getServiceInstance(interfaceName);
+							Server service = consulServiceDiscovery.getServiceInstance(rpcRequest);
 							// 如果服务不存在，null,否则就构建rpc客户端进行远程调用
 							if (service == null) {
-								logger.error("requestId:{},服务:{}的提供者不存在,发现服务失败", requestId, interfaceName);
+								logger.error("requestId:{},服务:{}的提供者不存在,发现服务失败", requestId, rpcRequest);
 								return null;
 							} else {
-								logger.info("requestId:{},发现服务完毕,准备解析服务[{}]", requestId, service);
 								// 解析服务地址
-								logger.info("requestId:{},服务地址解析完毕,准备构建RPC客户端", requestId);
+								logger.info("requestId:{},服务地址解析完毕,准备构建RpcClient", requestId);
 								// 构建rpc客户端
 								rpcClient = new RpcClient(service.getHost(), service.getPort());
 							}
 						}
 						logger.info("requestId:{},RpcClient构建完毕,准备向Rpc服务端发送请求,请求参数:{}", requestId, rpcClient);
 						// 向rpc服务端发送请求,返回信息
-						RpcResponse rpcResponse = rpcClient.sendRequest(request);
+						RpcResponse rpcResponse = rpcClient.sendRequest(rpcRequest);
 						if (rpcResponse.getError() != null) {
 							logger.error("requestId:{},请求失败:{}", requestId, rpcResponse.getError());
 							throw rpcResponse.getError();

@@ -22,10 +22,7 @@ import com.netflix.loadbalancer.WeightedResponseTimeRule;
 
 public class LoadBalancerUtil {
 
-	private static BaseLoadBalancer lb;
-	static {
-		lb = new BaseLoadBalancer();
-	}
+	private static BaseLoadBalancer lb = new BaseLoadBalancer();
 
 	/**
 	 * 从服务器列表中选择一个

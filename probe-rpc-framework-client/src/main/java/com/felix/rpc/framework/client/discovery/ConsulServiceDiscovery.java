@@ -2,8 +2,11 @@ package com.felix.rpc.framework.client.discovery;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.felix.rpc.framework.common.config.NettyServerConfig;
+import com.felix.rpc.framework.common.dto.RpcRequest;
 import com.felix.rpc.framework.common.utils.LoadBalancerUtil;
 import com.netflix.loadbalancer.Server;
 import com.orbitz.consul.Consul;
@@ -23,6 +26,8 @@ public class ConsulServiceDiscovery {
 
 	private NettyServerConfig nettyServerConfig;
 
+	private Map<String, Integer> hosts = new ConcurrentHashMap<>();
+
 	public ConsulServiceDiscovery() {
 
 	}
@@ -38,15 +43,16 @@ public class ConsulServiceDiscovery {
 	 * @param serviceName
 	 * @return
 	 */
-	public Server getServiceInstance(String serviceName) {
+	public Server getServiceInstance(RpcRequest rpcRequest) {
 		HealthClient healthClient = client.healthClient();
-		List<ServiceHealth> nodes = healthClient.getHealthyServiceInstances(serviceName).getResponse();
+		List<ServiceHealth> nodes = healthClient.getHealthyServiceInstances(rpcRequest.getInterfaceName())
+				.getResponse();
 		List<String> hosts = new ArrayList<>();
 		for (ServiceHealth serviceHealth : nodes) {
 			hosts.add(serviceHealth.getService().getAddress() + ":" + serviceHealth.getService().getPort());
 		}
 		Server selectConsulServer = LoadBalancerUtil.selectConsulServer(hosts, nettyServerConfig.getSelectStrategy());
-		logger.info("选择了服务:{}", selectConsulServer.getId());
+		logger.info("requestId:{},选择了服务:{}", rpcRequest.getRequestId(), selectConsulServer.getId());
 		return selectConsulServer;
 	}
 }

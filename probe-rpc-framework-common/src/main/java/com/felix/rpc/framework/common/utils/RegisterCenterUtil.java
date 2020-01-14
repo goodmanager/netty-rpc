@@ -24,16 +24,26 @@ public class RegisterCenterUtil {
 	 * @param registerCenterConfig
 	 * @return
 	 */
-	public static CuratorFramework getZkClient(RegisterCenterConfig registerCenterConfig) {
+	public static CuratorFramework getZkClient(RegisterCenterConfig registerCenterConfig, String requestId) {
 		CuratorFramework zkClient;
 		List<String> hosts = registerCenterConfig.getHosts();
 		Server server = LoadBalancerUtil.selectServer(hosts, registerCenterConfig.getSelectStrategy());
 		if (server == null) {
-			throw new RpcFrameworkException("获取zookeeper client失败");
+			String errorMsg;
+			if (requestId == null) {
+				errorMsg = "获取zookeeper client失败";
+			} else {
+				errorMsg = String.format("requestId:%s,获取zookeeper client失败", requestId);
+			}
+			throw new RpcFrameworkException(errorMsg);
 		}
 		zkClient = CuratorFrameworkFactory.newClient(server.getHostPort(), new ExponentialBackoffRetry(200, 3));
 		zkClient.start();
-		logger.info("选择了zookeeper注册中心的:{}服务器", server.getHostPort());
+		if (requestId != null) {
+			logger.info("选择了zookeeper注册中心的:{}服务器", server.getHostPort());
+		} else {
+			logger.info("requestId:{},选择了zookeeper注册中心的:{}服务器", requestId, server.getHostPort());
+		}
 		return zkClient;
 	}
 
@@ -43,14 +53,24 @@ public class RegisterCenterUtil {
 	 * @param registerCenterConfig
 	 * @return
 	 */
-	public static Consul getConsulClient(RegisterCenterConfig registerCenterConfig) {
+	public static Consul getConsulClient(RegisterCenterConfig registerCenterConfig, String requestId) {
 		List<String> hosts = registerCenterConfig.getHosts();
 		Server server = LoadBalancerUtil.selectServer(hosts, registerCenterConfig.getSelectStrategy());
 		if (server == null) {
-			throw new RpcFrameworkException("获取consul client失败");
+			String errorMsg;
+			if (requestId == null) {
+				errorMsg = "获取consul client失败";
+			} else {
+				errorMsg = String.format("requestId:%s,获取consul client失败", requestId);
+			}
+			throw new RpcFrameworkException(errorMsg);
 		}
 		HostAndPort hostAndPort = HostAndPort.fromString(server.getHostPort());
-		logger.info("选择了consul注册中心的:{}服务器", server.getHostPort());
+		if (requestId == null) {
+			logger.info("选择了consul注册中心的:{}服务器", server.getHostPort());
+		} else {
+			logger.info("requestId:{},选择了consul注册中心的:{}服务器", requestId, server.getHostPort());
+		}
 		return Consul.builder().withHostAndPort(hostAndPort).build();
 	}
 }

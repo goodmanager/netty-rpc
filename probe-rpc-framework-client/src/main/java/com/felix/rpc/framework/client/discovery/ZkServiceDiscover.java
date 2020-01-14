@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.felix.rpc.framework.common.config.NettyServerConfig;
+import com.felix.rpc.framework.common.dto.RpcRequest;
 import com.felix.rpc.framework.common.dto.ZkServiceInstanceDetail;
 import com.felix.rpc.framework.common.utils.LoadBalancerUtil;
 
@@ -45,14 +46,14 @@ public class ZkServiceDiscover {
 	 * @return
 	 * @throws Exception
 	 */
-	public ServiceInstance<ZkServiceInstanceDetail> getServiceInstance(String interfaceName) throws Exception {
-		ServiceProvider<ZkServiceInstanceDetail> provider = serviceProviderMap.get(interfaceName);
+	public ServiceInstance<ZkServiceInstanceDetail> getServiceInstance(RpcRequest rpcRequest) throws Exception {
+		ServiceProvider<ZkServiceInstanceDetail> provider = serviceProviderMap.get(rpcRequest.getInterfaceName());
 		if (provider == null) {
-			provider = LoadBalancerUtil.selectZookeeperServer(serviceDiscovery, interfaceName, serviceProviderMap,
-					nettyServerConfig);
+			provider = LoadBalancerUtil.selectZookeeperServer(serviceDiscovery, rpcRequest.getInterfaceName(),
+					serviceProviderMap, nettyServerConfig);
 		}
 		ServiceInstance<ZkServiceInstanceDetail> instance = provider.getInstance();
-		logger.info("选择了服务{}", instance.getId());
+		logger.info("requestId:{},选择了服务{}", rpcRequest.getRequestId(), instance.getId());
 		return instance;
 	}
 
