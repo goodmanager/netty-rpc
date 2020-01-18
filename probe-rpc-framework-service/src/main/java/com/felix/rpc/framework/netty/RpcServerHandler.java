@@ -6,7 +6,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson.JSON;
 import com.felix.rpc.framework.common.dto.RpcRequest;
 import com.felix.rpc.framework.common.dto.RpcResponse;
 
@@ -87,7 +86,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 		// 通过反射调用方法
 		logger.info("requestId:{},准备通过反射调用方法:{}", requestId, interfaceName + "." + methodName);
 		Object result = method.invoke(serivceBean, parameters);
-		logger.info("requestId:{},通过反射调用方法完毕,结果:{}", requestId, JSON.toJSONString(result));
+		logger.info("requestId:{},通过反射调用方法完毕,结果:", requestId, result);
 		// 返回结果
 		return result;
 	}
