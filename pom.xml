@@ -12,7 +12,7 @@
 
 	<artifactId>probe-rpc-framework</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0</version>
+	<version>0.0.1</version>
 
 	<modules>
 		<module>probe-rpc-framework-service</module>

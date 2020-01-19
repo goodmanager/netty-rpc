@@ -5,9 +5,10 @@
 	<parent>
 		<artifactId>probe-rpc-framework</artifactId>
 		<groupId>com.felix</groupId>
-		<version>1.0</version>
+		<version>0.0.1</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
+	<version>0.0.1</version>
 
 	<artifactId>probe-rpc-framework-service</artifactId>
 
@@ -15,7 +16,7 @@
 		<dependency>
 			<groupId>com.felix</groupId>
 			<artifactId>probe-rpc-framework-common</artifactId>
-			<version>1.0</version>
+			<version>0.0.1</version>
 		</dependency>
 	</dependencies>
 </project>
