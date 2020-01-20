@@ -88,6 +88,11 @@
 			<groupId>com.lmax</groupId>
 			<artifactId>disruptor</artifactId>
 		</dependency>
+		<!-- spring test -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>
