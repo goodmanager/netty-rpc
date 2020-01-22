@@ -44,7 +44,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.internal.SystemPropertyUtil;
 
 @Component
@@ -103,12 +102,11 @@ public class NettyRpcServer implements ApplicationRunner {
 
 		try {
 			ServerBootstrap b = new ServerBootstrap();
-			b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).option(ChannelOption.SO_BACKLOG, 128)
+			b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).option(ChannelOption.SO_BACKLOG, 1024)
 					.childHandler(new ChannelInitializer<SocketChannel>() {
 						@Override
 						protected void initChannel(SocketChannel sc) throws Exception {
 							ChannelPipeline cp = sc.pipeline();
-							cp.addLast(new LengthFieldBasedFrameDecoder(1024, 0, 2, 0, 2));
 							// 添加编码器，Rpc服务端需要解码的是RpcRequest对象，因为需要接收客户端发送过来的请求
 							cp.addLast(new RpcDecoder(RpcRequest.class));
 							// 添加解码器
@@ -116,7 +114,8 @@ public class NettyRpcServer implements ApplicationRunner {
 							// 添加业务处理handler
 							cp.addLast(new RpcServerHandler(serviceBeanMap));
 						}
-					}).childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+					}).childOption(ChannelOption.SO_KEEPALIVE, true)
+					.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 					.childOption(ChannelOption.SO_SNDBUF, 32 * 1024)
 					.childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000).childOption(ChannelOption.SO_TIMEOUT, 10)
 					.childOption(ChannelOption.TCP_NODELAY, true).childOption(ChannelOption.SO_RCVBUF, 32 * 1024);

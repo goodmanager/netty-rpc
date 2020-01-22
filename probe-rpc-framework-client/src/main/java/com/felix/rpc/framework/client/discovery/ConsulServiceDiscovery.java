@@ -52,7 +52,7 @@ public class ConsulServiceDiscovery {
 			hosts.add(serviceHealth.getService().getAddress() + ":" + serviceHealth.getService().getPort());
 		}
 		Server selectConsulServer = LoadBalancerUtil.selectConsulServer(hosts, nettyServerConfig.getSelectStrategy());
-		logger.info("requestId:{},选择了服务:{}", rpcRequest.getRequestId(), selectConsulServer.getId());
+		logger.info("选择了服务:{}", selectConsulServer.getId());
 		return selectConsulServer;
 	}
 }

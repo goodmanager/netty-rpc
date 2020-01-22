@@ -39,11 +39,7 @@ public class RegisterCenterUtil {
 		}
 		zkClient = CuratorFrameworkFactory.newClient(server.getHostPort(), new ExponentialBackoffRetry(200, 3));
 		zkClient.start();
-		if (requestId != null) {
-			logger.info("选择了zookeeper注册中心的:{}服务器", server.getHostPort());
-		} else {
-			logger.info("requestId:{},选择了zookeeper注册中心的:{}服务器", requestId, server.getHostPort());
-		}
+		logger.info("选择了zookeeper注册中心的:{}服务器", server.getHostPort());
 		return zkClient;
 	}
 
@@ -66,11 +62,7 @@ public class RegisterCenterUtil {
 			throw new RpcFrameworkException(errorMsg);
 		}
 		HostAndPort hostAndPort = HostAndPort.fromString(server.getHostPort());
-		if (requestId == null) {
-			logger.info("选择了consul注册中心的:{}服务器", server.getHostPort());
-		} else {
-			logger.info("requestId:{},选择了consul注册中心的:{}服务器", requestId, server.getHostPort());
-		}
+		logger.info("选择了consul注册中心的:{}服务器", server.getHostPort());
 		return Consul.builder().withHostAndPort(hostAndPort).build();
 	}
 }

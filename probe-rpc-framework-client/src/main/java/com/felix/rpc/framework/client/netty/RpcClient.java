@@ -19,7 +19,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
 public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
 
@@ -39,7 +38,7 @@ public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, RpcResponse rpcResponse) throws Exception {
-		logger.info("requestId:{},从Rpc服务端接收到响应,相应数据为:{}", rpcResponse.getRequestId(), rpcResponse);
+		logger.info("从Rpc服务端接收到响应,相应数据为:{}", rpcResponse);
 		this.rpcResponse = rpcResponse;
 		// 关闭与服务端的连接，这样就可以执行f.channel().closeFuture().sync();之后的代码，即优雅退出
 		// 相当于是主动关闭连接
@@ -53,23 +52,20 @@ public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
 	 * @return
 	 */
 	public RpcResponse sendRequest(RpcRequest rpcRequest) throws Exception {
-
-		String requestId = rpcRequest.getRequestId();
-
 		// 配置客户端NIO线程组
 		EventLoopGroup group = new NioEventLoopGroup();
 		try {
 			Bootstrap b = new Bootstrap();
-			b.group(group).channel(NioSocketChannel.class).option(ChannelOption.SO_BACKLOG, 128)
+			b.group(group).channel(NioSocketChannel.class).option(ChannelOption.SO_BACKLOG, 1024)
+					.option(ChannelOption.TCP_NODELAY, true)
 					// 设置TCP连接超时时间
-					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
 					.handler(new ChannelInitializer<SocketChannel>() {
 						@Override
 						protected void initChannel(SocketChannel sc) throws Exception {
 							ChannelPipeline cp = sc.pipeline();
 							// 添加编码器，Rpc服务端需要解码的是RpcRequest对象，因为需要接收客户端发送过来的请求
 							cp.addLast(new RpcEncoder(RpcRequest.class));
-							cp.addLast(new LengthFieldBasedFrameDecoder(1024, 0, 2, 0, 2));
 							// 添加解码器
 							cp.addLast(new RpcDecoder(RpcResponse.class));
 							// 添加业务处理handler
@@ -77,19 +73,19 @@ public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
 						}
 					});
 			// 发起异步连接操作（注意服务端是bind，客户端则需要connect）
-			logger.info("requestId:{},准备发起异步连接操作[{}:{}]", requestId, host, port);
+			logger.info("准备发起异步连接操作[{}:{}]", host, port);
 			ChannelFuture f = b.connect(host, port).sync();
 			// 向RPC服务端发起请求
-			logger.info("requestId:{},准备向RPC服务端发起请求", requestId);
+			logger.info("准备向RPC服务端发起请求");
 			f.channel().writeAndFlush(rpcRequest);
 
 			// 需要注意的是，如果没有接收到服务端返回数据，那么会一直停在这里等待
 			// 等待客户端链路关闭
-			logger.info("requestId:{},准备等待客户端链路关闭", requestId);
+			logger.info("准备等待客户端链路关闭");
 			f.channel().closeFuture().sync();
 		} finally {
 			// 优雅退出，释放NIO线程组
-			logger.info("requestId:{},优雅退出，释放NIO线程组", requestId);
+			logger.info("优雅退出，释放NIO线程组");
 			group.shutdownGracefully();
 		}
 		return rpcResponse;

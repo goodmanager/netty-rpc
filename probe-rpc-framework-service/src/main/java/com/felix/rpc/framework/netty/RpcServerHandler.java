@@ -37,8 +37,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 			@Override
 			public void run() {
 				RpcRequest rpcRequest = (RpcRequest) msg;
-				String requestId = rpcRequest.getRequestId();
-				logger.info("requestId:{},接收到来自RPC客户端的连接请求", requestId, rpcRequest);
+				logger.info("接收到来自RPC客户端的连接请求", rpcRequest);
 				RpcResponse rpcResponse = new RpcResponse();
 				// 设置requestId
 				rpcResponse.setRequestId(rpcRequest.getRequestId());
@@ -54,7 +53,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 				ctx.writeAndFlush(rpcResponse).addListener(new ChannelFutureListener() {
 					@Override
 					public void operationComplete(ChannelFuture channelFuture) throws Exception {
-						logger.info("requestId:{},请求处理完毕，回写response对象给客户端", requestId, rpcResponse);
+						logger.info("请求处理完毕，回写response对象给客户端", rpcResponse);
 					}
 				});
 			}
@@ -70,7 +69,6 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 	 * @throws Throwable
 	 */
 	public Object handleReuqest(RpcRequest rpcRequest) throws Throwable {
-		String requestId = rpcRequest.getRequestId();
 		String interfaceName = rpcRequest.getInterfaceName();
 		// 根据接口名拿到其实现类对象
 		Object serivceBean = serviceBeanMap.get(interfaceName);
@@ -84,9 +82,9 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 		// 拿到实现类对象的指定方法
 		Method method = clazz.getMethod(methodName, parameterTypes);
 		// 通过反射调用方法
-		logger.info("requestId:{},准备通过反射调用方法:{}", requestId, interfaceName + "." + methodName);
+		logger.info("准备通过反射调用方法:{}", interfaceName + "." + methodName);
 		Object result = method.invoke(serivceBean, parameters);
-		logger.info("requestId:{},通过反射调用方法完毕,结果:", requestId, result);
+		logger.info("通过反射调用方法完毕,结果:", result);
 		// 返回结果
 		return result;
 	}

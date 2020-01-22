@@ -53,7 +53,7 @@ public class ZkServiceDiscover {
 					serviceProviderMap, nettyServerConfig);
 		}
 		ServiceInstance<ZkServiceInstanceDetail> instance = provider.getInstance();
-		logger.info("requestId:{},选择了服务{}", rpcRequest.getRequestId(), instance.getId());
+		logger.info("选择了服务{}", instance.getId());
 		return instance;
 	}
 

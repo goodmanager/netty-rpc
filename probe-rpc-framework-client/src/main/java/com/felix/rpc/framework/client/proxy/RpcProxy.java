@@ -54,7 +54,7 @@ public class RpcProxy {
 				new InvocationHandler() {
 					@Override
 					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-						logger.info("requestId:{},准备构建RpcRequest对象", requestId);
+						logger.info("准备构建RpcRequest对象");
 						// 构建RpcRequest
 						RpcRequest rpcRequest = new RpcRequest();
 						// 设置requestId
@@ -67,7 +67,7 @@ public class RpcProxy {
 						// 设置参数列表parameters
 						rpcRequest.setParameters(args);
 
-						logger.info("requestId:{},RpcRequest:{},构建完毕", requestId, rpcRequest);
+						logger.info("RpcRequest:{},构建完毕", rpcRequest);
 						RpcClient rpcClient = null;
 						// 发现服务，得到服务地址，格式为 host:port
 						if (registerCenterConfig.getRegisterCenterType().getIndex() == RegisterCenterType.ZOOKEEPER
@@ -81,11 +81,11 @@ public class RpcProxy {
 									.getServiceInstance(rpcRequest);
 							// 如果服务不存在，null,否则就构建rpc客户端进行远程调用
 							if (serviceInstance == null) {
-								logger.error("requestId:{},服务:{}的提供者不存在,发现服务失败", requestId, rpcRequest);
+								logger.error("服务:{}的提供者不存在,发现服务失败", rpcRequest);
 								return null;
 							} else {
 								// 解析服务地址
-								logger.info("requestId:{},服务地址解析完毕,准备构建RpcClient", requestId);
+								logger.info("服务地址解析完毕,准备构建RpcClient");
 								// 构建rpc客户端
 								rpcClient = new RpcClient(serviceInstance.getAddress(), serviceInstance.getPort());
 							}
@@ -98,25 +98,25 @@ public class RpcProxy {
 							Server service = consulServiceDiscovery.getServiceInstance(rpcRequest);
 							// 如果服务不存在，null,否则就构建rpc客户端进行远程调用
 							if (service == null) {
-								logger.error("requestId:{},服务:{}的提供者不存在,发现服务失败", requestId, rpcRequest);
+								logger.error("服务:{}的提供者不存在,发现服务失败", rpcRequest);
 								return null;
 							} else {
 								// 解析服务地址
-								logger.info("requestId:{},服务地址解析完毕,准备构建RpcClient", requestId);
+								logger.info("服务地址解析完毕,准备构建RpcClient");
 								// 构建rpc客户端
 								rpcClient = new RpcClient(service.getHost(), service.getPort());
 							}
 						}
-						logger.info("requestId:{},RpcClient构建完毕,准备向Rpc服务端发送请求,请求参数:{}", requestId, rpcClient);
+						logger.info("RpcClient构建完毕,准备向Rpc服务端发送请求,请求参数:{}", rpcClient);
 						// 向rpc服务端发送请求,返回信息
 						RpcResponse rpcResponse = rpcClient.sendRequest(rpcRequest);
 						if (rpcResponse.getError() != null) {
-							logger.error("requestId:{},请求失败:{}", requestId, rpcResponse.getError());
+							logger.error("请求失败:{}", rpcResponse.getError());
 							throw rpcResponse.getError();
 						} else {
 							// 如果没有异常，则返回调用的结果
 							Object result = rpcResponse.getResult();
-							logger.info("requestId:{},{}远程过程调用完毕,远程过程调用成功,返回数据:{}", requestId, interfaceName, result);
+							logger.info("{}远程过程调用完毕,远程过程调用成功,返回数据:{}", interfaceName, result);
 							return result;
 						}
 					}
