@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import com.orbitz.consul.Consul;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.x.discovery.ServiceInstance;
+import org.apache.curator.x.discovery.ServiceType;
 import org.apache.curator.x.discovery.UriSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,6 +156,7 @@ public class NettyRpcServer implements ApplicationRunner {
 		}
 		logger.info("扫描完毕,总共扫描的RpcService:{}", serviceBeanMap.keySet());
 
+		// 将扫描到的服务注册到注册中心
 		for (String interfaceName : serviceBeanMap.keySet()) {
 			registerService(interfaceName);
 		}
@@ -179,9 +181,10 @@ public class NettyRpcServer implements ApplicationRunner {
 		if (index == RegisterCenterType.ZOOKEEPER.getIndex()) {
 			// 注册service 实例到zookeeper
 			ServiceInstance<ZkServiceInstanceDetail> serviceInstance = ServiceInstance
-					.<ZkServiceInstanceDetail>builder().id(id).name(interfaceName).port(nettyServerConfig.getPort())
-					.address(nettyServerConfig.getIpAddr()).payload(new ZkServiceInstanceDetail(id,
-							nettyServerConfig.getIpAddr(), nettyServerConfig.getPort(), interfaceName))
+					.<ZkServiceInstanceDetail>builder().serviceType(ServiceType.DYNAMIC).id(id).name(interfaceName)
+					.port(nettyServerConfig.getPort()).address(nettyServerConfig.getIpAddr())
+					.payload(new ZkServiceInstanceDetail(id, nettyServerConfig.getIpAddr(), nettyServerConfig.getPort(),
+							interfaceName))
 					.uriSpec(new UriSpec("{scheme}://{address}:{port}")).build();
 
 			zkServiceRegister.registerService(serviceInstance);
