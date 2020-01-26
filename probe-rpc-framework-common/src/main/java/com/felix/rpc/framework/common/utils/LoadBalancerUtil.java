@@ -31,15 +31,17 @@ public class LoadBalancerUtil {
 	 * @return
 	 */
 	public static Server selectServer(List<String> hosts, SelectStrategy selectStrategy) {
-		if (selectStrategy.getIndex() == SelectStrategy.RANDOM.getIndex()) {
-			RandomRule randomRule = new RandomRule();
-			lb.setRule(randomRule);
-		} else if (selectStrategy.getIndex() == SelectStrategy.BESTAVAILABLE.getIndex()) {
-			BestAvailableRule bestAvailable = new BestAvailableRule();
-			lb.setRule(bestAvailable);
-		} else if (selectStrategy.getIndex() == SelectStrategy.WEIGHTEDRESPONSETIME.getIndex()) {
-			WeightedResponseTimeRule weightedResponseTimeRule = new WeightedResponseTimeRule();
-			lb.setRule(weightedResponseTimeRule);
+		if (null != selectStrategy) {
+			if (selectStrategy.getIndex() == SelectStrategy.RANDOM.getIndex()) {
+				RandomRule randomRule = new RandomRule();
+				lb.setRule(randomRule);
+			} else if (selectStrategy.getIndex() == SelectStrategy.BESTAVAILABLE.getIndex()) {
+				BestAvailableRule bestAvailable = new BestAvailableRule();
+				lb.setRule(bestAvailable);
+			} else if (selectStrategy.getIndex() == SelectStrategy.WEIGHTEDRESPONSETIME.getIndex()) {
+				WeightedResponseTimeRule weightedResponseTimeRule = new WeightedResponseTimeRule();
+				lb.setRule(weightedResponseTimeRule);
+			}
 		}
 		List<Server> servers = new ArrayList<>();
 		for (String host : hosts) {
