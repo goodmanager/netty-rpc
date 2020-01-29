@@ -115,7 +115,7 @@ public class NettyRpcServer implements ApplicationRunner {
 							// 添加业务处理handler
 							cp.addLast(new RpcServerHandler(serviceBeanMap));
 						}
-					}).childOption(ChannelOption.SO_KEEPALIVE, true)
+					}).childOption(ChannelOption.SO_KEEPALIVE, false)
 					.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 					.childOption(ChannelOption.SO_SNDBUF, 32 * 1024)
 					.childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000).childOption(ChannelOption.SO_TIMEOUT, 10)
@@ -146,7 +146,7 @@ public class NettyRpcServer implements ApplicationRunner {
 		logger.info("标注了RpcService的用户服务实现类扫描完毕，准备将其接口和实现类对象保存到容器中");
 		for (Object serviceBean : beansWithAnnotation.values()) {
 			/**
-			 * 获取实现类对象的接口名称，思路是，实现类中标注了RPCService注解，同时其参数为实现类的接口类型
+			 * 获取实现类对象的接口名称，思路是，实现类中标注了RpcService注解，同时其参数为实现类的接口类型
 			 * 说明：实际上可以通过serviceBean.getClass().getInterfaces()的方式来获取其接口名称的
 			 * 只是如果是实现多个接口的情况下需要进行判断，这点后面再做具体的实现
 			 */
@@ -167,7 +167,7 @@ public class NettyRpcServer implements ApplicationRunner {
 			synchronized (NettyRpcServer.class) {
 				if (threadPoolExecutor == null) {
 					int threadCount = Runtime.getRuntime().availableProcessors();
-					threadPoolExecutor = new ThreadPoolExecutor(threadCount, threadCount * 10, 500L,
+					threadPoolExecutor = new ThreadPoolExecutor(threadCount, threadCount * 10, 200L,
 							TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(20480));
 				}
 			}

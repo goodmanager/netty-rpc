@@ -59,7 +59,7 @@ public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
 			b.group(group).channel(NioSocketChannel.class).option(ChannelOption.SO_BACKLOG, 1024)
 					.option(ChannelOption.TCP_NODELAY, true)
 					// 设置TCP连接超时时间
-					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
+					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
 					.handler(new ChannelInitializer<SocketChannel>() {
 						@Override
 						protected void initChannel(SocketChannel sc) throws Exception {
