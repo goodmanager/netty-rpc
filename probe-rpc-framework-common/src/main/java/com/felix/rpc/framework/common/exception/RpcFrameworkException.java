@@ -1,5 +1,11 @@
 package com.felix.rpc.framework.common.exception;
 
+/**
+ * Rpc Framework 异常
+ * 
+ * @author coral
+ *
+ */
 public class RpcFrameworkException extends RuntimeException {
 
 	/**
