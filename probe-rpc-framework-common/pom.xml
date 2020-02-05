@@ -23,17 +23,12 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-all</artifactId>
-		</dependency>
-
-		<!-- apache curator 排除旧版本guava -->
+		<!-- apache curator -->
 		<dependency>
 			<groupId>org.apache.curator</groupId>
 			<artifactId>curator-x-discovery</artifactId>
 		</dependency>
-		<!-- zookeeper -->
+		<!-- 重新引入apache curator依赖的zookeeper新版本 -->
 		<dependency>
 			<groupId>org.apache.zookeeper</groupId>
 			<artifactId>zookeeper</artifactId>
@@ -49,7 +44,7 @@
 			<artifactId>protostuff-runtime</artifactId>
 		</dependency>
 
-		<!-- consul client 排除旧版本guava -->
+		<!-- consul client -->
 		<dependency>
 			<groupId>com.orbitz.consul</groupId>
 			<artifactId>consul-client</artifactId>
@@ -60,17 +55,22 @@
 			<groupId>com.netflix.ribbon</groupId>
 			<artifactId>ribbon-loadbalancer</artifactId>
 		</dependency>
-		<!-- 重新引入ribbon-core 排除旧版本guava、commons-lang等 -->
+		<!-- 重新引入ribbon-loadbalancer依赖的ribbon-core新版本 -->
 		<dependency>
 			<groupId>com.netflix.ribbon</groupId>
 			<artifactId>ribbon-core</artifactId>
 		</dependency>
-		<!-- 重新servo-core 排除旧版本guava等 -->
+		<!-- 重新引入ribbon-loadbalancer依赖的servo-core新版本 -->
 		<dependency>
 			<groupId>com.netflix.servo</groupId>
 			<artifactId>servo-core</artifactId>
 		</dependency>
 
+		<!-- 引入新版的netty -->
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-all</artifactId>
+		</dependency>
 		<!-- 引入新版本 guava -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -87,11 +87,6 @@
 		<dependency>
 			<groupId>com.lmax</groupId>
 			<artifactId>disruptor</artifactId>
-		</dependency>
-		<!-- spring test -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
 		</dependency>
 	</dependencies>
 
