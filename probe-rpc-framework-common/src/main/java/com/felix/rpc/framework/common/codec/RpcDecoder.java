@@ -51,7 +51,7 @@ public class RpcDecoder extends ByteToMessageDecoder {
 		logger.info("准备反序列化对象");
 		// 3、进行反序列化对象
 		Object obj = SerializationUtil.deserializer(data, genericClass);
-		logger.info("反序列化对象完毕，准备将其添加到反序列化对象结果列表");
+		logger.info("反序列化对象完毕,准备将其添加到反序列化对象结果列表");
 		// 4、添加到反序列化对象结果列表
 		list.add(obj);
 	}

@@ -8,10 +8,10 @@ package com.felix.rpc.framework.common.config;
  */
 public enum SelectStrategy {
 
-	RANDOM(1, "Random"), //随机
-	ROUNDROBIN(2, "RoundRobin"), //轮训
-	BESTAVAILABLE(3, "BestAvailable"),//并发数低
-	WEIGHTEDRESPONSETIME(4, "WeightedResponseTime");//加权
+	RANDOM(1, "Random"), // 随机
+	ROUNDROBIN(2, "RoundRobin"), // 轮训
+	BESTAVAILABLE(3, "BestAvailable"), // 并发数低
+	WEIGHTEDRESPONSETIME(4, "WeightedResponseTime");// 加权
 
 	private int index;
 	private String description;

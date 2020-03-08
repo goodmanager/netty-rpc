@@ -32,7 +32,7 @@ public class RpcEncoder extends MessageToByteEncoder<Object> {
 		if (genericClass.isInstance(o)) {
 			logger.info("准备序列化对象");
 			byte[] data = SerializationUtil.serializer(o);
-			logger.info("序列化对象完毕，准备将其写入到ByteBuf中");
+			logger.info("序列化对象完毕,准备将其写入到ByteBuf中");
 			byteBuf.writeInt(data.length);
 			byteBuf.writeBytes(data);
 		}

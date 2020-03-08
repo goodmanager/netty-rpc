@@ -22,14 +22,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import com.felix.rpc.framework.common.annotation.RpcService;
-import com.felix.rpc.framework.common.codec.RpcDecoder;
-import com.felix.rpc.framework.common.codec.RpcEncoder;
 import com.felix.rpc.framework.common.config.NettyServerConfig;
 import com.felix.rpc.framework.common.config.RegisterCenterConfig;
 import com.felix.rpc.framework.common.config.RegisterCenterType;
 import com.felix.rpc.framework.common.dto.ConsulServiceInstanceDetail;
-import com.felix.rpc.framework.common.dto.RpcRequest;
-import com.felix.rpc.framework.common.dto.RpcResponse;
 import com.felix.rpc.framework.common.dto.ZkServiceInstanceDetail;
 import com.felix.rpc.framework.common.utils.RegisterCenterUtil;
 import com.felix.rpc.framework.register.ConsulServiceRegister;
@@ -38,12 +34,9 @@ import com.felix.rpc.framework.register.ZkServiceRegister;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.internal.SystemPropertyUtil;
 
@@ -104,22 +97,12 @@ public class NettyRpcServer implements ApplicationRunner {
 		try {
 			ServerBootstrap b = new ServerBootstrap();
 			b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).option(ChannelOption.SO_BACKLOG, 1024)
-					.childHandler(new ChannelInitializer<SocketChannel>() {
-						@Override
-						protected void initChannel(SocketChannel sc) throws Exception {
-							ChannelPipeline cp = sc.pipeline();
-							// 添加编码器，Rpc服务端需要解码的是RpcRequest对象，因为需要接收客户端发送过来的请求
-							cp.addLast(new RpcDecoder(RpcRequest.class));
-							// 添加解码器
-							cp.addLast(new RpcEncoder(RpcResponse.class));
-							// 添加业务处理handler
-							cp.addLast(new RpcServerHandler(serviceBeanMap));
-						}
-					}).childOption(ChannelOption.SO_KEEPALIVE, false)
+					.option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_SNDBUF, 32 * 1024)
+					.option(ChannelOption.SO_RCVBUF, 32 * 1024)
+					.childHandler(new ServerChannelInitializer(serviceBeanMap))
+					.childOption(ChannelOption.SO_KEEPALIVE, false)
 					.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-					.childOption(ChannelOption.SO_SNDBUF, 32 * 1024)
-					.childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000).childOption(ChannelOption.SO_TIMEOUT, 10)
-					.childOption(ChannelOption.TCP_NODELAY, true).childOption(ChannelOption.SO_RCVBUF, 32 * 1024);
+					.childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000).childOption(ChannelOption.SO_TIMEOUT, 10);
 
 			// 绑定端口，同步等待成功，该方法是同步阻塞的，绑定成功后返回一个ChannelFuture
 			logger.info("准备绑定服务提供者地址和端口{}:{}", nettyServerConfig.getIpAddr(), nettyServerConfig.getPort());
@@ -167,7 +150,7 @@ public class NettyRpcServer implements ApplicationRunner {
 			synchronized (NettyRpcServer.class) {
 				if (threadPoolExecutor == null) {
 					int threadCount = Runtime.getRuntime().availableProcessors();
-					threadPoolExecutor = new ThreadPoolExecutor(threadCount, threadCount * 10, 200L,
+					threadPoolExecutor = new ThreadPoolExecutor(threadCount, threadCount * 2, 200L,
 							TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(20480));
 				}
 			}

@@ -3,21 +3,16 @@ package com.felix.rpc.framework.client.netty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.felix.rpc.framework.common.codec.RpcDecoder;
-import com.felix.rpc.framework.common.codec.RpcEncoder;
 import com.felix.rpc.framework.common.dto.RpcRequest;
 import com.felix.rpc.framework.common.dto.RpcResponse;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
@@ -59,19 +54,8 @@ public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
 			b.group(group).channel(NioSocketChannel.class).option(ChannelOption.SO_BACKLOG, 1024)
 					.option(ChannelOption.TCP_NODELAY, true)
 					// 设置TCP连接超时时间
-					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
-					.handler(new ChannelInitializer<SocketChannel>() {
-						@Override
-						protected void initChannel(SocketChannel sc) throws Exception {
-							ChannelPipeline cp = sc.pipeline();
-							// 添加编码器，Rpc服务端需要解码的是RpcRequest对象，因为需要接收客户端发送过来的请求
-							cp.addLast(new RpcEncoder(RpcRequest.class));
-							// 添加解码器
-							cp.addLast(new RpcDecoder(RpcResponse.class));
-							// 添加业务处理handler
-							cp.addLast(RpcClient.this);
-						}
-					});
+					.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+					.handler(new ClientChannlInitializer(host, port));
 			// 发起异步连接操作（注意服务端是bind，客户端则需要connect）
 			logger.info("准备发起异步连接操作[{}:{}]", host, port);
 			ChannelFuture f = b.connect(host, port).sync();
