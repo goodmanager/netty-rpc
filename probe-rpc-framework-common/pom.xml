@@ -65,6 +65,14 @@
 			<groupId>com.netflix.servo</groupId>
 			<artifactId>servo-core</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.netflix.netflix-commons</groupId>
+			<artifactId>netflix-statistics</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.netflix-commons</groupId>
+			<artifactId>netflix-commons-util</artifactId>
+		</dependency>
 
 		<!-- 引入新版的netty -->
 		<dependency>
